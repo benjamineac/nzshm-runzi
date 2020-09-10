@@ -1,0 +1,9 @@
+#PBS -l nodes=1:ppn=16
+#PBS -l walltime=00:10:00
+
+export PATH=/opt/sw/java/java-se-8u41-ri/bin:$PATH
+export JAVA_CLASSPATH=~/NSHM/opensha/nshm-nz-opensha/build/libs/nshm-nz-opensha-all.jar
+cd ~/NSHM/opensha/nshm-nz-opensha
+java -Xms4G -Xmx80G -classpath ${JAVA_CLASSPATH} scratch.kevin.ucerf3.downDipSubSectTest.demo.HikurangiCrustalDemoTwo
+
+
