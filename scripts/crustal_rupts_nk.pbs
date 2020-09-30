@@ -1,0 +1,14 @@
+#PBS -l nodes=1:ppn=32
+#PBS -l walltime=12:00:00
+
+export PATH=/opt/sw/java/java-se-8u41-ri/bin:$PATH
+export JAVA_CLASSPATH=~/NSHM/opensha/nshm-nz-opensha/build/libs/nshm-nz-opensha-all.jar
+export CLASSNAME=nz.cri.gns.NSHM.opensha.scripts.scriptCrustalInversionRunner
+#export OPTS="-fsdFile ./data/FaultModels/sectionsv5_full_testlabe7.xml"
+export OPTS="-fsdFile ./data/FaultModels/DEMO2_crustal_opensha.xml"
+export OPTS=${OPTS}" -o ./tmp -maxFaultSections 1000 -maxLength 0.5"
+export OPTS=${OPTS}" -maxDistance 3.0"
+export OPTS=${OPTS}" -inversionMins 720 -syncInterval 30 -runInversion false"
+
+cd ~/NSHM/opensha/nshm-nz-opensha
+java -Xms4G -Xmx120G -classpath ${JAVA_CLASSPATH} ${CLASSNAME} ${OPTS} > ./tmp/crustal_ruptures.log
