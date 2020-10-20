@@ -25,8 +25,8 @@ def get_repo_heads(rootdir, repos):
 
 class CSVResultWriter:
 	def __init__(self, file, repos):
-		fieldnames = ['Data', 'OutputFile', 'PermutationStrategy', 'maxSubSectionLength', 'maxFaultSections',
-					'minSubSectsPerParent', 'MaxCumAz', 'rupture_count', 'subsection_count', 
+		fieldnames = ['Data', 'OutputFile', 'PermutationStrategy', 'maxJumpDistance', 'maxSubSectionLength', 'maxFaultSections',
+					'minSubSectsPerParent', 'maxCumAz', 'rupture_count', 'subsection_count', 
 					'possible_cluster_connections', 'cluster_connections', 'datetime', 'duration'] + repos
 		self._file = file
 		self._writer = csv.DictWriter(file, fieldnames)
@@ -36,7 +36,7 @@ class CSVResultWriter:
 		self._writer.writerow(kwargs)
 		self._file.flush() #we want to see the data in the csv ASAP 
 
-def run_tests(writer, output_folder, repoheads, inputs, jump_limits, ddw_ratios, strategies):
+def run_tests(builder, writer, output_folder, repoheads, inputs, jump_limits, ddw_ratios, strategies, max_sections = 1000):
 	
 	def ruptureSetMetrics(builder):		
 		conf = builder.getPlausabilityConfig()
@@ -55,7 +55,7 @@ def run_tests(writer, output_folder, repoheads, inputs, jump_limits, ddw_ratios,
 		
 		return metrics
 	
-	def test_arguments(builder, filekey, outputfile, strategy, ddw, max_sections, minSubSectsPerParent=2, MaxCumAz=560):
+	def test_arguments(builder, filekey, outputfile, strategy, max_distance, ddw, max_sections, minSubSectsPerParent=2, MaxCumAz=560):
 		res = {}
 		res['Data'] = filekey
 		res['OutputFile'] = outputfile.parts[-1]
@@ -63,7 +63,8 @@ def run_tests(writer, output_folder, repoheads, inputs, jump_limits, ddw_ratios,
 		res['maxSubSectionLength'] = ddw
 		res['maxFaultSections'] = max_sections
 		res['minSubSectsPerParent'] = minSubSectsPerParent
-		res['MaxCumAz'] = MaxCumAz
+		res['maxCumAz'] = MaxCumAz
+		res['maxJumpDistance'] = max_distance
 		return res
 	
 	for key, filepath in inputs.items():
@@ -84,7 +85,7 @@ def run_tests(writer, output_folder, repoheads, inputs, jump_limits, ddw_ratios,
 
 					#report it
 					duration = (dt.utcnow() - t0).total_seconds()
-					results = test_arguments(builder, key, outputfile, strategy, ddw, max_sections) #record the input args
+					results = test_arguments(builder, key, outputfile, strategy, distance, ddw, max_sections) #record the input args
 					results.update(ruptureSetMetrics(builder)) #record the result metrics
 					results.update(repoheads) # record the repo refs
 					results['datetime'] = dt.utcnow().isoformat()
@@ -108,19 +109,20 @@ if __name__ == "__main__":
 		"ALL": root_folder.joinpath("nshm-nz-opensha/data/FaultModels/DEMO2_DIPFIX_crustal_opensha.xml"),
  		"SANS_TVZ2": root_folder.joinpath("nshm-nz-opensha/data/FaultModels/SANSTVZ2_crustal_opensha.xml")}
 	strategies = ['DOWNDIP', 'POINTS', 'UCERF3']
+	strategies = ['POINTS',]
 	jump_limits = [0.75, 1.0, 2.0, 3.0, 4.0, 4.5, 5.0, 5.1, 5.2, 5.3]
 	ddw_ratios = [0.5, 1.0, 1.5, 2.0, 2.5]
 	
-	#test the tests, nomally 1000 for NS CFM 
+	#test the tests, nomally 1000 for NZ CFM 
 	max_sections = 1000
 
 	repos = ["opensha-ucerf3", "opensha-commons", "opensha-core", "nshm-nz-opensha"]
 	repo_root = root_folder #PurePath('/home/chrisbc/DEV/GNS/opensha')
-	output_folder = root_folder.joinpath('tmp').joinpath(dt.utcnow().isoformat())	
+	output_folder = root_folder.joinpath('tmp').joinpath(dt.utcnow().isoformat().replace(':','-'))	
 	os.mkdir(output_folder)
 
 	writer = CSVResultWriter(open(output_folder.joinpath('results.csv'), 'w'), repos) 
 	repoheads = get_repo_heads(root_folder, repos)
-	run_tests(writer, output_folder, repoheads, inputfiles, jump_limits, ddw_ratios, strategies )
+	run_tests(builder, writer, output_folder, repoheads, inputfiles, jump_limits, ddw_ratios, strategies, max_sections)
 	print("Done!")
 

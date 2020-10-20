@@ -1,0 +1,13 @@
+#PBS -l nodes=1:ppn=32
+#PBS -l walltime=72:00:00
+
+export PATH=/opt/sw/java/java-se-8u41-ri/bin:$PATH
+export JAVA_CLASSPATH=~/NSHM/opensha/nshm-nz-opensha/build/libs/nshm-nz-opensha-all.jar
+export CLASSNAME=nz.cri.gns.NSHM.opensha.util.NSHMRuptureSetBuilderPythonGateway
+
+cd ~/NSHM/opensha
+java -Xms4G -Xmx120G -classpath ${JAVA_CLASSPATH} ${CLASSNAME} > ./tmp/autom2_ruptures.log &
+python3.6 nshm-nz-opensha/src/python/automation/run_rupture_sets2.py > ./tmp/autom2_python.log
+
+#Kill the Java gateway server
+kill -9 $!
