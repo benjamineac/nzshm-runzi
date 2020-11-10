@@ -23,20 +23,8 @@ def get_repo_heads(rootdir, repos):
         result[reponame] = headcommit.hexsha
     return result
 
-# def get_git_head_meta(rootdir, repo):
-#   repo = git.Repo(rootdir.joinpath(repo))
-#   headcommit = repo.head.commit
-#   return dict(
-#       head_commit_date = dt.fromtimestamp(headcommit.committed_date).isoformat(),
-#       head_hexsha = headcommit.hexsha,
-#       head_author_name = headcommit.author.name )
-
 class CSVResultWriter:
     def __init__(self, file, repos):
-        # fieldnames = ['Data', 'OutputFile', 'PermutationStrategy', 'maxJumpDistance', 'maxSubSectionLength', 'maxFaultSections',
-        #             'minSubSectsPerParent', 'maxCumAz', 'rupture_count', 'subsection_count',
-        #             'possible_cluster_connections', 'cluster_connections', 'datetime', 'duration'] + repos
-
         create_names = { #create_args
                      'started': None,
                      'permutationStrategy': None,
@@ -62,7 +50,6 @@ class CSVResultWriter:
         fieldnames = ['outputfile']
         fieldnames.extend(create_names)
         fieldnames.extend(done_names)
-        #create_names.extend(done_names)
 
         self._file = file
         self._writer = csv.DictWriter(file, fieldnames)
@@ -94,30 +81,19 @@ def run_tests(builder, writer, output_folder, repoheads, inputs, jump_limits, dd
 
         return metrics
 
-    # def test_arguments(builder, filekey, outputfile, strategy, max_distance, ddw, max_sections, minSubSectsPerParent=2, MaxCumAz=560):
-    #     res = {}
-    #     res['Data'] = filekey
-    #     res['OutputFile'] = outputfile.parts[-1]
-    #     res['PermutationStrategy'] = strategy
-    #     res['maxSubSectionLength'] = ddw
-    #     res['maxFaultSections'] = max_sections
-    #     res['minSubSectsPerParent'] = minSubSectsPerParent
-    #     res['maxCumAz'] = MaxCumAz
-    #     res['maxJumpDistance'] = max_distance
-    #     return res
-
-    MaxCumAz=560
-    minSubSectsPerParent=2
+    max_cumulative_azimuth=560.0
+    min_sub_sects_per_parent=2
     for filekey, filepath in inputs.items():
         filename = str(filepath)
+        #store the input data
+        input_data_id = ruptgen_api.upload_file(filename)
         for strategy in strategies:
             for distance in jump_limits:
                 for ddw in ddw_ratios:
                     t0 = dt.datetime.utcnow()
                     outputfile = output_folder.joinpath("ruptset_ddw%s_jump%s_%s_%s.zip" %  (ddw, distance, filekey, strategy))
 
-                    #esults = test_arguments(builder, key, outputfile, strategy, distance, ddw, max_sections) #record the input args
-                    #create new task in toshi_api
+                    #task arguments
                     create_args = {
                      'started':dt.datetime.now(tzutc()).isoformat(),
                      'permutationStrategy': strategy,
@@ -127,34 +103,35 @@ def run_tests(builder, writer, output_folder, repoheads, inputs, jump_limits, dd
                      'nshmNzOpensha': repoheads['nshm-nz-opensha'],
                      'maxJumpDistance':distance,
                      'maxSubSectionLength':ddw,
-                     'maxCumulativeAzimuth':MaxCumAz,
-                     'minSubSectionsPerParent':minSubSectsPerParent
+                     'maxCumulativeAzimuth':max_cumulative_azimuth,
+                     'minSubSectionsPerParent':min_sub_sects_per_parent
                     }
+                    #create new task in toshi_api
                     task_id = ruptgen_api.create_task(create_args)
 
+                    #link task to the input datafile (*.XML)
+                    ruptgen_api.link_task_file(task_id, input_data_id, 'READ')
+
                     print("building %s started at %s" % (outputfile, dt.datetime.utcnow().isoformat()), end=' ')
+
+                    # Run the task....
                     builder\
                         .setMaxFaultSections(max_sections)\
                         .setMaxJumpDistance(distance)\
                         .setPermutationStrategy(strategy)\
                         .setMaxSubSectionLength(ddw)\
+                        .setMinSubSectsPerParent(min_sub_sects_per_parent)\
+                        .setMaxCumulativeAzimuthChange(max_cumulative_azimuth)\
                         .buildRuptureSet(filename)
-                        #.minSubSectsPerParent(2)\
 
-                    #report it
+                    #capture task metrics
                     duration = (dt.datetime.utcnow() - t0).total_seconds()
                     metrics = ruptureSetMetrics(builder)
 
-                    #results =  create_args.copy()
-                    # results['Data'] = filekey
-                    # results['OutputFile'] = outputfile.parts[-1]
-                    # results.update(metrics) #record the result metrics
-                    # results.update(repoheads) # record the repo refs
-                    # results['datetime'] = dt.datetime.utcnow().isoformat()
-                    # results['duration'] = duration
+                    #create the output dataset
                     builder.writeRuptureSet(str(outputfile))
 
-                    #update task result in toshi_api
+                    #task results
                     done_args = {
                      'taskId':task_id,
                      'duration':duration,
@@ -164,44 +141,53 @@ def run_tests(builder, writer, output_folder, repoheads, inputs, jump_limits, dd
                      'subsectionCount':metrics["subsection_count"],
                      'clusterConnectionCount':metrics["cluster_connections"]
                     }
+
                     #csv local backup
                     create_args.update(done_args)
                     create_args['outputfile'] = outputfile.parts[-1]
                     writer.writerow(**create_args)
+
+                    #record the completed task
                     ruptgen_api.complete_task(done_args)
 
-                    #upload some task file
-                    ruptgen_api.upload_task_file(task_id, outputfile)
+                    #upload the task output
+                    ruptgen_api.upload_task_file(task_id, outputfile, 'WRITE')
                     print("; took %s secs" % (dt.datetime.utcnow() - t0).total_seconds())
 
 
 if __name__ == "__main__":
 
+    #setup the java gateway binding
     gateway = JavaGateway()
     app = gateway.entry_point
     builder = app.getBuilder()
 
+    #get the root path for the task local data
     root_folder = PurePath(os.getcwd())
+
+    repos = ["opensha-ucerf3", "opensha-commons", "opensha-core", "nshm-nz-opensha"]
+    #repo_root = root_folder
+    output_folder = root_folder.joinpath('tmp').joinpath(dt.datetime.utcnow().isoformat().replace(':','-'))
+    os.mkdir(output_folder)
+
+    #setup the csv (backup) task recorder
+    writer = CSVResultWriter(open(output_folder.joinpath('results.csv'), 'w'), repos)
+    repoheads = get_repo_heads(root_folder, repos)
 
     ##Test parameters
     inputfiles = {
         "ALL": root_folder.joinpath("nshm-nz-opensha/data/FaultModels/DEMO2_DIPFIX_crustal_opensha.xml"),
         "SANS_TVZ2": root_folder.joinpath("nshm-nz-opensha/data/FaultModels/SANSTVZ2_crustal_opensha.xml")}
-    strategies = ['DOWNDIP', 'POINTS', 'UCERF3']
+    strategies = ['DOWNDIP',]# 'POINTS', 'UCERF3']
     # strategies = ['POINTS',]
-    jump_limits = [0.75, 1.0, 2.0, 3.0, 4.0, 4.5, 5.0, 5.1, 5.2, 5.3]
-    ddw_ratios = [0.5, 1.0, 1.5, 2.0, 2.5]
+    jump_limits = [0.75, 1.0] #, 2.0, 3.0, 4.0, 4.5, 5.0, 5.1, 5.2, 5.3]
+    ddw_ratios = [0.5, 1.0] #, 1.5, 2.0, 2.5]
 
     #test the tests, nomally 1000 for NZ CFM
     max_sections = 200
 
-    repos = ["opensha-ucerf3", "opensha-commons", "opensha-core", "nshm-nz-opensha"]
-    repo_root = root_folder #PurePath('/home/chrisbc/DEV/GNS/opensha')
-    output_folder = root_folder.joinpath('tmp').joinpath(dt.datetime.utcnow().isoformat().replace(':','-'))
-    os.mkdir(output_folder)
-
-    writer = CSVResultWriter(open(output_folder.joinpath('results.csv'), 'w'), repos)
-    repoheads = get_repo_heads(root_folder, repos)
+    #Run the tests....
     run_tests(builder, writer, output_folder, repoheads, inputfiles, jump_limits, ddw_ratios, strategies, max_sections)
+
     print("Done!")
 
