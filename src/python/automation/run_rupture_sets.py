@@ -192,13 +192,13 @@ if __name__ == "__main__":
         "SANS_TVZ2": root_folder.joinpath("nshm-nz-opensha/data/FaultModels/SANSTVZ2_crustal_opensha.xml")}
     strategies = ['DOWNDIP', 'POINTS'] #, 'UCERF3' == DOWNDIP]
     # strategies = ['POINTS',]
-    jump_limits = [0.75, 1.0] #, 2.0, 3.0, 4.0, 4.5, 5.0, 5.1, 5.2, 5.3]
+    jump_limits = [0.75, 1.0, 2.0, 3.0, 4.0, 4.5, 5.0, 5.1, 5.2, 5.3]
     ddw_ratios = [0.5, 1.0] #, 1.5, 2.0, 2.5]
     min_sub_sects_per_parents = [2,3,4]
     max_cumulative_azimuths = [560.0, 580.0, 600.0]
 
     #test the tests, nomally 1000 for NZ CFM
-    max_sections = 300
+    max_sections = 1000
 
     #Run the tasks....
     run_tasks(builder, ruptgen_api, writer, output_folder, repoheads,
