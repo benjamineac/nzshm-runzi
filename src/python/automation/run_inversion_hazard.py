@@ -1,0 +1,78 @@
+import json
+import git
+import csv
+import os
+from pathlib import PurePath
+from py4j.java_gateway import JavaGateway
+import datetime as dt
+from dateutil.tz import tzutc
+
+
+if __name__ == "__main__":
+
+    #setup the java gateway binding
+    gateway = JavaGateway()
+    app = gateway.entry_point
+    #builder = app.getBuilder()
+    inversion_runner = app.getRunner()
+    hazard_calc = app.getCalculator()
+
+    ##Test parameters
+    inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-11-22T23-49-54.671294/ruptset_ddw0.5_jump5.0_SANS_TVZ2_560.0_2_DOWNDIP.zip"
+
+    t0 = dt.datetime.utcnow()
+    INVERSION_MINS = 15
+    SOLUTION_FILE = "/home/chrisbc/DEV/GNS/opensha/tmp/TestSolution_%s.zip" % INVERSION_MINS
+
+    print("Starting inversion of %s minutes" % INVERSION_MINS)
+    print("=================================")
+    inversion_runner\
+        .setInversionMinutes(INVERSION_MINS)\
+        .setSyncInterval(30)\
+        .run(inputfile)
+    inversion_runner.writeSolution(SOLUTION_FILE)
+
+    t1 = dt.datetime.utcnow()
+    # print("took %s secs" % (t1-t0).total_seconds())
+
+    print("Setting up hazard")
+    print("=================")
+    calc = hazard_calc\
+        .setForecastTimespan(50.0)\
+        .setSolutionFile(SOLUTION_FILE)\
+        .setMaxDistance(250.0)\
+        .build()
+
+    t2 = dt.datetime.utcnow()
+    print("took %s secs" % (t2-t1).total_seconds())
+
+    print("Hazard in Site...")
+    print("==========================")
+    masterton = dict(lat=-40.95972, lon=175.6575)
+    wellington = dict(lat=-41.289, lon=174.777)
+    result = calc.calc(wellington['lat'], wellington['lon'], True)
+
+    # print(dir(result))
+    """
+    ['areAllXValuesInteger', 'calcSumOfY_Vals', 'clear', 'deepClone', 'equals', 'forEach', 'fromXMLMetadata',
+    'get', 'getClass', 'getClosestXtoY', 'getClosestYtoX', 'getDatasetsToPlot',
+    'getFirstInterpolatedX', 'getFirstInterpolatedX_inLogXLogYDomain', 'getFirstInterpolatedX_inLogYDomain',
+    'getIndex', 'getInfo', 'getInterpExterpY_inLogYDomain', 'getInterpolatedY', 'getInterpolatedY_inLogXDomain',
+    'getInterpolatedY_inLogXLogYDomain', 'getInterpolatedY_inLogYDomain', 'getMaxX', 'getMaxY',
+    'getMetadataString', 'getMinX', 'getMinY', 'getName', 'getPlotNumColorList',
+    'getPointsIterator', 'getTolerance', 'getX', 'getXAxisName', 'getXIndex', 'getXVals',
+    'getXValuesIterator', 'getY', 'getYAxisName', 'getYVals', 'getYValuesIterator',
+    'getYY_Function', 'hasX', 'hashCode', 'iterator', 'loadFuncFromSimpleFile',
+    'main', 'notify', 'notifyAll', 'scale', 'set', 'setInfo', 'setName',
+    'setTolerance', 'setXAxisName', 'setYAxisName', 'size', 'spliterator', 'toDebugString',
+    'toString', 'toXMLMetadata', 'wait', 'writeSimpleFuncFile', 'xValues', 'yValues']
+    """
+
+    fout = open("wgtn_50yr_250km_PGA_inversion_for_%s_mins" % INVERSION_MINS, 'w')
+    fout.write(result.getInfo())
+    fout.write('\n\n')
+    fout.write(result.toString())
+
+    t3 = dt.datetime.utcnow()
+    print("took %s secs" % (t3-t2).total_seconds())
+    print("Done!")
