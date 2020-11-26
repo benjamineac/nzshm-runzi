@@ -163,7 +163,6 @@ def run_tasks(builder, ruptgen_api, writer, output_folder, repoheads, inputs, ju
                             run_task(builder, ruptgen_api, writer, filename, input_data_id, ddw, distance, filekey,
                                     max_cumulative_azimuth, min_sub_sects_per_parent,
                                     strategy)
-                            return
 
 if __name__ == "__main__":
 
