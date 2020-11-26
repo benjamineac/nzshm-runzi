@@ -30,27 +30,27 @@ class CSVResultWriter:
     def __init__(self, file, repos):
         create_names = { #create_args
                      'started': None,
-                     'permutationStrategy': None,
-                     'openshaCore': None,
-                     'openshaCommons': None,
-                     'openshaUcerf3': None,
-                     'nshmNzOpensha': None,
-                     'maxJumpDistance': None,
-                     'maxSubSectionLength': None,
-                     'maxCumulativeAzimuth': None,
-                     'minSubSectionsPerParent': None,
+                     'permutation_strategy': None,
+                     'opensha_core': None,
+                     'opensha_commons': None,
+                     'opensha_ucerf3': None,
+                     'nshm_nz_opensha': None,
+                     'max_jump_distance': None,
+                     'max_sub_section_length': None,
+                     'max_cumulative_azimuth': None,
+                     'min_sub_sections_per_parent': None,
                     }.keys()
 
         done_names = { #done_args
-                     'taskId': None,
+                     'task_id': None,
                      'duration': None,
                      'result': None,
                      'state': None,
-                     'ruptureCount': None,
-                     'subsectionCount': None,
-                     'clusterConnectionCount': None,
+                     'rupture_count': None,
+                     'subsection_count': None,
+                     'cluster_connection_count': None,
                     }.keys()
-        fieldnames = ['outputfile']
+        fieldnames = ['output_file']
         fieldnames.extend(create_names)
         fieldnames.extend(done_names)
 
@@ -89,15 +89,15 @@ def run_task(builder, ruptgen_api, writer, filename, input_data_id, ddw, distanc
     #task arguments
     create_args = {
      'started':dt.datetime.now(tzutc()).isoformat(),
-     'permutationStrategy': strategy,
-     'openshaCore': repoheads['opensha-core'],
-     'openshaCommons': repoheads['opensha-commons'],
-     'openshaUcerf3': repoheads['opensha-ucerf3'],
-     'nshmNzOpensha': repoheads['nshm-nz-opensha'],
-     'maxJumpDistance':distance,
-     'maxSubSectionLength':ddw,
-     'maxCumulativeAzimuth':max_cumulative_azimuth,
-     'minSubSectionsPerParent':min_sub_sects_per_parent
+     'permutation_strategy': strategy,
+     'opensha_core': repoheads['opensha-core'],
+     'opensha_commons': repoheads['opensha-commons'],
+     'opensha_ucerf3': repoheads['opensha-ucerf3'],
+     'nshm_nz_opensha': repoheads['nshm-nz-opensha'],
+     'max_jump_distance':distance,
+     'max_sub_section_length':ddw,
+     'max_cumulative_azimuth':max_cumulative_azimuth,
+     'min_sub_sections_per_parent':min_sub_sects_per_parent
     }
     #create new task in toshi_api
     task_id = ruptgen_api.create_task(create_args)
@@ -126,18 +126,18 @@ def run_task(builder, ruptgen_api, writer, filename, input_data_id, ddw, distanc
 
     #task results
     done_args = {
-     'taskId':task_id,
+     'task_id':task_id,
      'duration':duration,
      'result':"SUCCESS",
      'state':"DONE",
-     'ruptureCount': metrics["rupture_count"],
-     'subsectionCount':metrics["subsection_count"],
-     'clusterConnectionCount':metrics["cluster_connections"]
+     'rupture_count': metrics["rupture_count"],
+     'subsection_count':metrics["subsection_count"],
+     'cluster_connection_count':metrics["cluster_connections"]
     }
 
     #csv local backup
     create_args.update(done_args)
-    create_args['outputfile'] = outputfile.parts[-1]
+    create_args['output_file'] = outputfile.parts[-1]
     writer.writerow(**create_args)
 
     #record the completed task
@@ -163,6 +163,7 @@ def run_tasks(builder, ruptgen_api, writer, output_folder, repoheads, inputs, ju
                             run_task(builder, ruptgen_api, writer, filename, input_data_id, ddw, distance, filekey,
                                     max_cumulative_azimuth, min_sub_sects_per_parent,
                                     strategy)
+                            return
 
 if __name__ == "__main__":
 
