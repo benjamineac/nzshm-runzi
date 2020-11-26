@@ -10,7 +10,6 @@ export HTTPS_PROXY=${http_proxy}
 export no_proxy="127.0.0.1,localhost"
 export NO_PROXY=${no_proxy}
 
-export TOSHI_API_KEY_DEV=FPQbuP4j141vuAoK1BEZ2Nd5BJ20L4l5VMtdwM0a
 export PATH=/opt/sw/java/java-se-8u41-ri/bin:$PATH
 export JAVA_CLASSPATH=~/NSHM/opensha/nshm-nz-opensha/build/libs/nshm-nz-opensha-all.jar
 export CLASSNAME=nz.cri.gns.NSHM.opensha.util.NSHMPythonGateway
