@@ -18,11 +18,15 @@ if __name__ == "__main__":
     hazard_calc = app.getCalculator()
 
     ##Test parameters
-    inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-11-22T23-49-54.671294/ruptset_ddw0.5_jump5.0_SANS_TVZ2_560.0_2_DOWNDIP.zip"
+    # inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-11-22T23-49-54.671294/ruptset_ddw0.5_jump5.0_SANS_TVZ2_560.0_2_DOWNDIP.zip"
+    # inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-12-07T01-14-52.776388/ruptset_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_DOWNDIP.zip"
+    #inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-12-07T23-33-01.777193/ruptset_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_DOWNDIP_0.1.zip"
+    inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-12-07T23-40-04.296119/ruptset_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_DOWNDIP_thin0.5.zip"
+
 
     t0 = dt.datetime.utcnow()
-    INVERSION_MINS = 15
-    SOLUTION_FILE = "/home/chrisbc/DEV/GNS/opensha/tmp/TestSolution_%s.zip" % INVERSION_MINS
+    INVERSION_MINS = 60
+    SOLUTION_FILE = "/home/chrisbc/DEV/GNS/opensha/tmp/TestSolution_%s_thin0.5.zip" % INVERSION_MINS
 
     print("Starting inversion of %s minutes" % INVERSION_MINS)
     print("=================================")
@@ -50,7 +54,7 @@ if __name__ == "__main__":
     print("==========================")
     masterton = dict(lat=-40.95972, lon=175.6575)
     wellington = dict(lat=-41.289, lon=174.777)
-    result = calc.calc(wellington['lat'], wellington['lon'], True)
+    result = calc.calc(wellington['lat'], wellington['lon'])
 
     # print(dir(result))
     """
@@ -68,7 +72,7 @@ if __name__ == "__main__":
     'toString', 'toXMLMetadata', 'wait', 'writeSimpleFuncFile', 'xValues', 'yValues']
     """
 
-    fout = open("wgtn_50yr_250km_PGA_inversion_for_%s_mins" % INVERSION_MINS, 'w')
+    fout = open("wgtn_50yr_250km_PGA_inversion_for_%s_mins_thinned_0.1" % INVERSION_MINS, 'w')
     fout.write(result.getInfo())
     fout.write('\n\n')
     fout.write(result.toString())

@@ -1,0 +1,8 @@
+# created by virtualenv automatically
+*.pyc
+bin/**
+lib/**
+pyvenv.cfg
+share/**
+src/**
+**/tmp/**

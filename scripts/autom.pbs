@@ -1,6 +1,15 @@
 #PBS -l nodes=1:ppn=32
 #PBS -l walltime=72:00:00
 
+##FIRST RUN `python3.6 -m proxy --hostname 0.0.0.0`
+
+export http_proxy=http://beavan:8899/
+export https_proxy=${http_proxy}
+export HTTP_PROXY=${http_proxy}
+export HTTPS_PROXY=${http_proxy}
+export no_proxy="127.0.0.1,localhost"
+export NO_PROXY=${no_proxy}
+
 export PATH=/opt/sw/java/java-se-8u41-ri/bin:$PATH
 export JAVA_CLASSPATH=~/NSHM/opensha/nshm-nz-opensha/build/libs/nshm-nz-opensha-all.jar
 export CLASSNAME=nz.cri.gns.NSHM.opensha.util.NSHMPythonGateway
