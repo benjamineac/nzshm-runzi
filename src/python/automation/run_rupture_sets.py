@@ -14,8 +14,8 @@ S3_URL = "https://nshm-tosh-api-dev.s3.amazonaws.com/"
 API_KEY = "TOSHI_API_KEY_DEV"
 
 # uncomment for local S3 testing with `sls s3 start &`
-# API_URL = 'http://127.0.0.1:5000/graphql'
-# S3_URL = "http://localhost:4569"
+API_URL = 'http://127.0.0.1:5000/graphql'
+S3_URL = "http://localhost:4569"
 
 
 def get_repo_heads(rootdir, repos):
@@ -39,6 +39,7 @@ class CSVResultWriter:
                      'max_sub_section_length': None,
                      'max_cumulative_azimuth': None,
                      'min_sub_sections_per_parent': None,
+                     'thinning_factor': None
                     }.keys()
 
         done_names = { #done_args
@@ -68,7 +69,7 @@ def ruptureSetMetrics(builder):
     metrics = {}
     metrics["subsection_count"] = builder.getSubSections().size()
     metrics["rupture_count"] = builder.getRuptures().size()
-    metrics["possible_cluster_connections"] = conf.getConnectionStrategy().getClusterConnectionCount()
+    ## metrics["possible_cluster_connections"] = conf.getConnectionStrategy().getClusterConnectionCount()
 
     # get info form the configuratiion
     conf_diags = json.loads(conf.toJSON())
@@ -81,10 +82,10 @@ def ruptureSetMetrics(builder):
 
 
 def run_task(builder, ruptgen_api, writer, filename, input_data_id, ddw, distance, filekey,
-        max_cumulative_azimuth, min_sub_sects_per_parent, strategy):
+        max_cumulative_azimuth, min_sub_sects_per_parent, strategy, thinning_factor):
     t0 = dt.datetime.utcnow()
-    outputfile = output_folder.joinpath("ruptset_ddw%s_jump%s_%s_%s_%s_%s.zip" %  (ddw,
-        distance, filekey, max_cumulative_azimuth, min_sub_sects_per_parent, strategy))
+    outputfile = output_folder.joinpath("ruptset_ddw%s_jump%s_%s_%s_%s_%s_thin%s.zip" %  (ddw,
+        distance, filekey, max_cumulative_azimuth, min_sub_sects_per_parent, strategy, thinning_factor))
 
     #task arguments
     create_args = {
@@ -97,8 +98,10 @@ def run_task(builder, ruptgen_api, writer, filename, input_data_id, ddw, distanc
      'max_jump_distance':distance,
      'max_sub_section_length':ddw,
      'max_cumulative_azimuth':max_cumulative_azimuth,
-     'min_sub_sections_per_parent':min_sub_sects_per_parent
+     'min_sub_sections_per_parent':min_sub_sects_per_parent,
     }
+    #     'thinning_factor': thinning_factor
+
     #create new task in toshi_api
     task_id = ruptgen_api.create_task(create_args)
 
@@ -115,7 +118,9 @@ def run_task(builder, ruptgen_api, writer, filename, input_data_id, ddw, distanc
         .setMaxSubSectionLength(ddw)\
         .setMinSubSectsPerParent(min_sub_sects_per_parent)\
         .setMaxCumulativeAzimuthChange(max_cumulative_azimuth)\
-        .buildRuptureSet(filename)
+        .setThinningFactor(thinning_factor)\
+        .setFaultModelFile(filename)\
+        .buildRuptureSet()
 
     #capture task metrics
     duration = (dt.datetime.utcnow() - t0).total_seconds()
@@ -149,7 +154,7 @@ def run_task(builder, ruptgen_api, writer, filename, input_data_id, ddw, distanc
 
 
 def run_tasks(builder, ruptgen_api, writer, output_folder, repoheads, inputs, jump_limits, ddw_ratios, strategies,
-            max_cumulative_azimuths, min_sub_sects_per_parents, max_sections = 1000):
+            max_cumulative_azimuths, min_sub_sects_per_parents, thinning_factors, max_sections = 1000):
 
     for filekey, filepath in inputs.items():
         filename = str(filepath)
@@ -160,9 +165,12 @@ def run_tasks(builder, ruptgen_api, writer, output_folder, repoheads, inputs, ju
                 for max_cumulative_azimuth in max_cumulative_azimuths:
                     for min_sub_sects_per_parent in min_sub_sects_per_parents:
                         for ddw in ddw_ratios:
-                            run_task(builder, ruptgen_api, writer, filename, input_data_id, ddw, distance, filekey,
-                                    max_cumulative_azimuth, min_sub_sects_per_parent,
-                                    strategy)
+                            for thinning_factor in thinning_factors:
+                                run_task(builder, ruptgen_api, writer, filename, input_data_id, ddw, distance, filekey,
+                                        max_cumulative_azimuth, min_sub_sects_per_parent,
+                                        strategy, thinning_factor)
+                            return
+
 
 if __name__ == "__main__":
 
@@ -187,15 +195,19 @@ if __name__ == "__main__":
     ruptgen_api = RuptureGenerationTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
 
     ##Test parameters
+    ##"ALL": root_folder.joinpath("nshm-nz-opensha/data/FaultModels/DEMO2_DIPFIX_crustal_opensha.xml"),
     inputfiles = {
-        "ALL": root_folder.joinpath("nshm-nz-opensha/data/FaultModels/DEMO2_DIPFIX_crustal_opensha.xml"),
         "SANS_TVZ2": root_folder.joinpath("nshm-nz-opensha/data/FaultModels/SANSTVZ2_crustal_opensha.xml")}
+
     strategies = ['DOWNDIP', 'POINTS'] #, 'UCERF3' == DOWNDIP]
     # strategies = ['POINTS',]
-    jump_limits = [0.75, 1.0, 2.0, 3.0, 4.0, 4.5, 5.0, 5.1, 5.2, 5.3]
+    jump_limits = [0.75, 1.0, 2.0, 3.0, 4.0, 4.5,]
+    jump_limits = [5.0, 5.1, 5.2, 5.3]
     ddw_ratios = [0.5, 1.0] #, 1.5, 2.0, 2.5]
     min_sub_sects_per_parents = [2,3,4]
-    max_cumulative_azimuths = [560.0, 580.0, 600.0]
+    max_cumulative_azimuths = [560.0, ]
+    max_cumulative_azimuths = [580.0, 600.0]
+    thinning_factors = [0.2, 0.5, 0.0]
 
     #test the tests, nomally 1000 for NZ CFM
     max_sections = 1000
@@ -204,7 +216,7 @@ if __name__ == "__main__":
     run_tasks(builder, ruptgen_api, writer, output_folder, repoheads,
         inputfiles, jump_limits, ddw_ratios, strategies,
         max_cumulative_azimuths, min_sub_sects_per_parents,
-        max_sections)
+        thinning_factors, max_sections)
 
     print("Done!")
 
