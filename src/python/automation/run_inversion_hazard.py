@@ -21,12 +21,16 @@ if __name__ == "__main__":
     # inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-11-22T23-49-54.671294/ruptset_ddw0.5_jump5.0_SANS_TVZ2_560.0_2_DOWNDIP.zip"
     # inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-12-07T01-14-52.776388/ruptset_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_DOWNDIP.zip"
     #inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-12-07T23-33-01.777193/ruptset_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_DOWNDIP_0.1.zip"
-    inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-12-07T23-40-04.296119/ruptset_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_DOWNDIP_thin0.5.zip"
+    #inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-12-07T23-40-04.296119/ruptset_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_DOWNDIP_thin0.5.zip"
+    #inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-12-14T00-03-34.026887/ruptset_ddw0.5_jump5.0_SANS_TVZ2_HIKURANGI_1_580.0_2_UCERF3_thin0.1.zip"
+    #inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-12-15T00-02-59.733572/ruptset_ddw0.5_jump5.0_SANS_TVZ2_HIKURANGI_1_580.0_2_UCERF3_thin0.1.zip"
 
+    # COMBO 330K
+    inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-12-15T02-58-03.807233/ruptset_ddw0.5_jump5.0_SANS_TVZ2_HIKURANGI_1_580.0_2_UCERF3_thin0.1.zip"
 
     t0 = dt.datetime.utcnow()
-    INVERSION_MINS = 60
-    SOLUTION_FILE = "/home/chrisbc/DEV/GNS/opensha/tmp/TestSolution_%s_thin0.5.zip" % INVERSION_MINS
+    INVERSION_MINS = 90
+    SOLUTION_FILE = "/home/chrisbc/DEV/GNS/opensha/tmp/reports/TestSolution_%sm_COMBINED_330K.zip" % INVERSION_MINS
 
     print("Starting inversion of %s minutes" % INVERSION_MINS)
     print("=================================")
@@ -72,7 +76,7 @@ if __name__ == "__main__":
     'toString', 'toXMLMetadata', 'wait', 'writeSimpleFuncFile', 'xValues', 'yValues']
     """
 
-    fout = open("wgtn_50yr_250km_PGA_inversion_for_%s_mins_thinned_0.1" % INVERSION_MINS, 'w')
+    fout = open("wgtn_50yr_250km_PGA_inversion_for_%sm_COMBINED_330K." % INVERSION_MINS, 'w')
     fout.write(result.getInfo())
     fout.write('\n\n')
     fout.write(result.toString())
