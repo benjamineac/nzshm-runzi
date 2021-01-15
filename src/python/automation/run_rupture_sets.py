@@ -197,7 +197,7 @@ def run_task(builder, ruptgen_api, writer,
     print("; took %s secs" % (dt.datetime.utcnow() - t0).total_seconds())
 
 
-def run_tasks(builder, ruptgen_api, writer, output_folder, repoheads, crustal_files, subduction_files, jump_limits, ddw_ratios, strategies,
+def run_tasks(app, ruptgen_api, writer, output_folder, repoheads, crustal_files, subduction_files, jump_limits, ddw_ratios, strategies,
             max_cumulative_azimuths, min_sub_sects_per_parents, thinning_factors, max_sections = 1000):
 
     for filekey, filepath in crustal_files.items():
@@ -212,12 +212,13 @@ def run_tasks(builder, ruptgen_api, writer, output_folder, repoheads, crustal_fi
                         for min_sub_sects_per_parent in min_sub_sects_per_parents:
                             for ddw in ddw_ratios:
                                 for thinning_factor in thinning_factors:
+                                    builder = app.getBuilder()
                                     run_task(builder, ruptgen_api, writer,
                                             crustal_filename, crustal_id, filekey,
                                             subduction_filename, subduction_id, subfilekey,
                                             ddw, distance, max_cumulative_azimuth, min_sub_sects_per_parent,
                                             strategy, thinning_factor)
-                                    return
+                                return
 
 
 if __name__ == "__main__":
@@ -225,7 +226,6 @@ if __name__ == "__main__":
     #setup the java gateway binding
     gateway = JavaGateway()
     app = gateway.entry_point
-    builder = app.getBuilder()
 
     #get the root path for the task local data
     root_folder = PurePath(os.getcwd())
@@ -260,10 +260,10 @@ if __name__ == "__main__":
     thinning_factors = [0.1, 0.2, 0.0]
 
     #test the tests, nomally 1000 for NZ CFM
-    max_sections = 1000
+    max_sections = 200
 
     #Run the tasks....
-    run_tasks(builder, ruptgen_api, writer, output_folder, repoheads,
+    run_tasks(app, ruptgen_api, writer, output_folder, repoheads,
         crustal_files, subduction_files, jump_limits, ddw_ratios, strategies,
         max_cumulative_azimuths, min_sub_sects_per_parents,
         thinning_factors, max_sections)
