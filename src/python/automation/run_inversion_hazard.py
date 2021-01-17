@@ -3,7 +3,7 @@ import git
 import csv
 import os
 from pathlib import PurePath
-from py4j.java_gateway import JavaGateway
+from py4j.java_gateway import JavaGateway, java_import
 import datetime as dt
 from dateutil.tz import tzutc
 
@@ -12,6 +12,13 @@ if __name__ == "__main__":
 
     #setup the java gateway binding
     gateway = JavaGateway()
+
+    java_import(gateway.jvm, 'scratch.UCERF3.inversion.*') ## for SlipRateConstraintWeightingType
+
+    # x = gateway.jvm.UCERF3InversionConfiguration()
+    sliprate_weighting = gateway.jvm.UCERF3InversionConfiguration.SlipRateConstraintWeightingType
+    # print(sw)
+
     app = gateway.entry_point
     #builder = app.getBuilder()
     inversion_runner = app.getRunner()
@@ -46,6 +53,7 @@ if __name__ == "__main__":
             5.05, # mfdMin=
             8.95 #mfdMax=
             )\
+        .setSlipRateConstraint(sliprate_weighting.NORMALIZED_BY_SLIP_RATE, float(100), float(10))\
         .runInversion()
     inversion_runner.writeSolution(SOLUTION_FILE)
 
