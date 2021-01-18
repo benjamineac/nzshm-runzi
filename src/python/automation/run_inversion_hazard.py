@@ -6,6 +6,7 @@ from pathlib import PurePath
 from py4j.java_gateway import JavaGateway, java_import
 import datetime as dt
 from dateutil.tz import tzutc
+from types import SimpleNamespace
 
 
 if __name__ == "__main__":
@@ -40,19 +41,27 @@ if __name__ == "__main__":
     SOLUTION_FILE = "/home/chrisbc/DEV/GNS/opensha/tmp/reports/TestSolution_%sm_COMBINED_330K.zip" % INVERSION_MINS
     TOTAL_RATE_M5 = 8.8
 
+    mfd = SimpleNamespace(**dict(
+        total_rate_m5 = 8.8,
+        b_value = 1.0,
+        mfd_transition_mag = 7.85,
+        mfd_num = 40,
+        mfd_min = 5.05,
+        mfd_max = 8.95))
+
+    mfd_equality_constraint_weight = 10
+    mfd_inequality_constraint_weight = 1000
+
     print("Starting inversion of %s minutes" % INVERSION_MINS)
     print("=================================")
     inversion_runner\
         .setInversionMinutes(INVERSION_MINS)\
         .setSyncInterval(30)\
         .setRuptureSetFile(inputfile)\
-        .setGutenbergRichterMFD(TOTAL_RATE_M5,
-            1.0 , #bValue=
-            7.85, #mfdTransitionMag=
-            40, #mfdNum=
-            5.05, # mfdMin=
-            8.95 #mfdMax=
-            )\
+        .setGutenbergRichterMFD(mfd.total_rate_m5, mfd.b_value, mfd.mfd_transition_mag, mfd.mfd_num, mfd.mfd_min, mfd.mfd_max)\
+        .setGutenbergRichterMFDWeights(
+            float(mfd_equality_constraint_weight),
+            float(mfd_inequality_constraint_weight))\
         .setSlipRateConstraint(sliprate_weighting.NORMALIZED_BY_SLIP_RATE, float(100), float(10))\
         .runInversion()
     inversion_runner.writeSolution(SOLUTION_FILE)
