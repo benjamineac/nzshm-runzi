@@ -16,10 +16,6 @@ if __name__ == "__main__":
 
     java_import(gateway.jvm, 'scratch.UCERF3.inversion.*') ## for SlipRateConstraintWeightingType
 
-    # x = gateway.jvm.UCERF3InversionConfiguration()
-    sliprate_weighting = gateway.jvm.UCERF3InversionConfiguration.SlipRateConstraintWeightingType
-    # print(sw)
-
     app = gateway.entry_point
     #builder = app.getBuilder()
     inversion_runner = app.getRunner()
@@ -37,9 +33,8 @@ if __name__ == "__main__":
     inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-12-15T02-58-03.807233/ruptset_ddw0.5_jump5.0_SANS_TVZ2_HIKURANGI_1_580.0_2_UCERF3_thin0.1.zip"
 
     t0 = dt.datetime.utcnow()
-    INVERSION_MINS = 2
+    INVERSION_MINS = 101
     SOLUTION_FILE = "/home/chrisbc/DEV/GNS/opensha/tmp/reports/TestSolution_%sm_COMBINED_330K.zip" % INVERSION_MINS
-    TOTAL_RATE_M5 = 8.8
 
     mfd = SimpleNamespace(**dict(
         total_rate_m5 = 8.8,
@@ -52,10 +47,13 @@ if __name__ == "__main__":
     mfd_equality_constraint_weight = 10
     mfd_inequality_constraint_weight = 1000
 
-    print("Starting inversion of %s minutes" % INVERSION_MINS)
-    print("=================================")
+    sliprate_weighting = gateway.jvm.UCERF3InversionConfiguration.SlipRateConstraintWeightingType
+
+    print("Starting inversion of up to %s minutes" % INVERSION_MINS)
+    print("======================================")
     inversion_runner\
         .setInversionMinutes(INVERSION_MINS)\
+        .setEnergyChangeCompletionCriteria(float(0), float(45), float(1))\
         .setSyncInterval(30)\
         .setRuptureSetFile(inputfile)\
         .setGutenbergRichterMFD(mfd.total_rate_m5, mfd.b_value, mfd.mfd_transition_mag, mfd.mfd_num, mfd.mfd_min, mfd.mfd_max)\
