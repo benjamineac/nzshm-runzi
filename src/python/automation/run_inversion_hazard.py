@@ -33,7 +33,7 @@ if __name__ == "__main__":
     inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-12-15T02-58-03.807233/ruptset_ddw0.5_jump5.0_SANS_TVZ2_HIKURANGI_1_580.0_2_UCERF3_thin0.1.zip"
 
     t0 = dt.datetime.utcnow()
-    INVERSION_MINS = 5
+    INVERSION_MINS = 30
     SOLUTION_FILE = "/home/chrisbc/DEV/GNS/opensha/tmp/reports/TestSolution_%sm_COMBINED_330K.zip" % INVERSION_MINS
 
     mfd = SimpleNamespace(**dict(
@@ -61,15 +61,23 @@ if __name__ == "__main__":
             float(mfd_equality_constraint_weight),
             float(mfd_inequality_constraint_weight))\
         .setSlipRateConstraint(sliprate_weighting.NORMALIZED_BY_SLIP_RATE, float(100), float(10))\
-        .setNumThreads(8)\
+        .setNumThreads(16)\
         .runInversion()
     inversion_runner.writeSolution(SOLUTION_FILE)
 
     t1 = dt.datetime.utcnow()
     print("Inversion took %s secs" % (t1-t0).total_seconds())
 
-
     info = inversion_runner.completionCriteriaMetrics()
+    print(info)
+
+    info = inversion_runner.momentAndRateMetrics()
+    print(info)
+
+    info = inversion_runner.byFaultNameMetrics()
+    print(info)
+
+    info = inversion_runner.parentFaultMomentRates()
     print(info)
 
     # print("Setting up hazard")
