@@ -17,7 +17,6 @@ API_KEY = "TOSHI_API_KEY_DEV"
 API_URL = 'http://127.0.0.1:5000/graphql'
 S3_URL = "http://localhost:4569"
 
-
 def get_repo_heads(rootdir, repos):
     result = {}
     for reponame in repos:
@@ -105,14 +104,17 @@ def run_task(builder, ruptgen_api, writer,
     }
     #     'thinning_factor': thinning_factor
 
-    #create new task in toshi_api
-    task_id = ruptgen_api.create_task(create_args)
+    if USE_API:
+        #create new task in toshi_api
+        task_id = ruptgen_api.create_task(create_args)
 
-    #link task to the input datafile (*.XML)
-    ruptgen_api.link_task_file(task_id, crustal_id, 'READ')
+        #link task to the input datafile (*.XML)
+        ruptgen_api.link_task_file(task_id, crustal_id, 'READ')
 
-    #link task to the subduction input datafile (*.csv)
-    ruptgen_api.link_task_file(task_id, subduction_id, 'READ')
+        #link task to the subduction input datafile (*.csv)
+        ruptgen_api.link_task_file(task_id, subduction_id, 'READ')
+    else:
+        task_id = None
 
     print("building %s started at %s" % (outputfile, dt.datetime.utcnow().isoformat()), end=' ')
 
@@ -189,11 +191,12 @@ def run_task(builder, ruptgen_api, writer,
     create_args['output_file'] = outputfile.parts[-1]
     writer.writerow(**create_args)
 
-    #record the completed task
-    ruptgen_api.complete_task(done_args)
+    if USE_API:
+        #record the completed task
+        ruptgen_api.complete_task(done_args)
 
-    #upload the task output
-    ruptgen_api.upload_task_file(task_id, outputfile, 'WRITE')
+        #upload the task output
+        ruptgen_api.upload_task_file(task_id, outputfile, 'WRITE')
     print("; took %s secs" % (dt.datetime.utcnow() - t0).total_seconds())
 
 
@@ -202,10 +205,16 @@ def run_tasks(app, ruptgen_api, writer, output_folder, repoheads, crustal_files,
 
     for filekey, filepath in crustal_files.items():
         crustal_filename = str(filepath)
-        crustal_id = ruptgen_api.upload_file(crustal_filename)
+        if USE_API:
+            crustal_id = ruptgen_api.upload_file(crustal_filename)
+        else:
+            crustal_id = None
         for subfilekey, subfilepath in subduction_files.items():
             subduction_filename = str(subfilepath)
-            subduction_id = ruptgen_api.upload_file(subduction_filename)
+            if USE_API:
+                subduction_id = ruptgen_api.upload_file(subduction_filename)
+            else:
+                subduction_id = None
             for strategy in strategies:
                 for distance in jump_limits:
                     for max_cumulative_azimuth in max_cumulative_azimuths:
@@ -223,6 +232,8 @@ def run_tasks(app, ruptgen_api, writer, output_folder, repoheads, crustal_files,
 
 if __name__ == "__main__":
 
+    USE_API = False
+
     #setup the java gateway binding
     gateway = JavaGateway()
     app = gateway.entry_point
@@ -239,8 +250,11 @@ if __name__ == "__main__":
     writer = CSVResultWriter(open(output_folder.joinpath('results.csv'), 'w'), repos)
     repoheads = get_repo_heads(root_folder, repos)
 
-    headers={"x-api-key":os.getenv(API_KEY)}
-    ruptgen_api = RuptureGenerationTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
+    if USE_API:
+        headers={"x-api-key":os.getenv(API_KEY)}
+        ruptgen_api = RuptureGenerationTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
+    else:
+        ruptgen_api = None
 
     ##Test parameters
     ##"ALL": root_folder.joinpath("nshm-nz-opensha/data/FaultModels/DEMO2_DIPFIX_crustal_opensha.xml"),

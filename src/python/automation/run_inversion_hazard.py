@@ -30,11 +30,13 @@ if __name__ == "__main__":
     #inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-12-15T00-02-59.733572/ruptset_ddw0.5_jump5.0_SANS_TVZ2_HIKURANGI_1_580.0_2_UCERF3_thin0.1.zip"
 
     # COMBO 330K
-    inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-12-15T02-58-03.807233/ruptset_ddw0.5_jump5.0_SANS_TVZ2_HIKURANGI_1_580.0_2_UCERF3_thin0.1.zip"
+    # inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-12-15T02-58-03.807233/ruptset_ddw0.5_jump5.0_SANS_TVZ2_HIKURANGI_1_580.0_2_UCERF3_thin0.1.zip"
+
+    inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2021-02-18T02-35-48.189785/ruptset_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_UCERF3_thin0.1.zip"
 
     t0 = dt.datetime.utcnow()
-    INVERSION_MINS = 30
-    SOLUTION_FILE = "/home/chrisbc/DEV/GNS/opensha/tmp/reports/TestSolution_%sm_COMBINED_330K.zip" % INVERSION_MINS
+    INVERSION_MINS = 120
+    SOLUTION_FILE = "/home/chrisbc/DEV/GNS/opensha/tmp/reports/TestSolution_%sm_CRUSTAL_SANS_TVZ2.zip" % INVERSION_MINS
 
     mfd = SimpleNamespace(**dict(
         total_rate_m5 = 8.8,
@@ -53,7 +55,7 @@ if __name__ == "__main__":
     print("======================================")
     inversion_runner\
         .setInversionMinutes(INVERSION_MINS)\
-        .setEnergyChangeCompletionCriteria(float(0), float(0.4), float(1))\
+        .setEnergyChangeCompletionCriteria(float(0), float(0.05), float(1))\
         .setSyncInterval(30)\
         .setRuptureSetFile(inputfile)\
         .setGutenbergRichterMFD(mfd.total_rate_m5, mfd.b_value, mfd.mfd_transition_mag, mfd.mfd_num, mfd.mfd_min, mfd.mfd_max)\
