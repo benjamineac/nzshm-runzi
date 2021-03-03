@@ -31,11 +31,12 @@ if __name__ == "__main__":
 
     # COMBO 330K
     # inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2020-12-15T02-58-03.807233/ruptset_ddw0.5_jump5.0_SANS_TVZ2_HIKURANGI_1_580.0_2_UCERF3_thin0.1.zip"
-
-    inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2021-02-18T02-35-48.189785/ruptset_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_UCERF3_thin0.1.zip"
+    # inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2021-03-02T08-04-59.066119/ruptset_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_UCERF3_thin0.zip"
+    inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2021-03-02T08-30-22.459299/ruptset_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_UCERF3_thin0.05.zip"
+    inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2021-03-02T08-04-59.066119/ruptset_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_UCERF3_thin0.zip"
 
     t0 = dt.datetime.utcnow()
-    INVERSION_MINS = 60
+    INVERSION_MINS =100
     SOLUTION_FILE = "/home/chrisbc/DEV/GNS/opensha/tmp/reports/TestSolution_%sm_CRUSTAL_SANS_TVZ2_BGSEIS.zip" % INVERSION_MINS
 
     mfd = SimpleNamespace(**dict(
@@ -55,7 +56,7 @@ if __name__ == "__main__":
     print("======================================")
     inversion_runner\
         .setInversionMinutes(INVERSION_MINS)\
-        .setEnergyChangeCompletionCriteria(float(0), float(0.005), float(1))\
+        .setEnergyChangeCompletionCriteria(float(0), float(0.001), float(1))\
         .setSyncInterval(30)\
         .setRuptureSetFile(inputfile)\
         .setNumThreads(12)\

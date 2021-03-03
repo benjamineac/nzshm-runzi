@@ -26,8 +26,8 @@ def run_task(builder,
         .setMaxSubSectionLength(ddw)\
         .setMinSubSectsPerParent(min_sub_sects_per_parent)\
         .setMaxCumulativeAzimuthChange(max_cumulative_azimuth)\
-        .setThinningFactor(thinning_factor)\
-        .setFaultModelFile(crustal_filename)
+        .setFaultModelFile(crustal_filename)\
+        .setThinningFactor(thinning_factor)
 
     builder.buildRuptureSet()
 
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     ddw = 0.5 #, 1.5, 2.0, 2.5]
     min_sub_sects_per_parent = 2 #,3,4]
     max_cumulative_azimuth = 580.0 #, 600.0]
-    thinning_factor = 0.1 #, 0.2, 0.0]
+    thinning_factor = 0.05 #, 0.2, 0.0]
 
     #test the tests, nomally 1000 for NZ CFM
     max_sections = 1000
