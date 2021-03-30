@@ -36,9 +36,9 @@ if __name__ == "__main__":
     inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2021-03-02T08-04-59.066119/ruptset_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_UCERF3_thin0.zip"
 
     t0 = dt.datetime.utcnow()
-    INVERSION_MINS =100
+    INVERSION_MINS =10*60+1
     SOLUTION_FILE = "/home/chrisbc/DEV/GNS/opensha/tmp/reports/TestSolution_%sm_CRUSTAL_SANS_TVZ2_BGSEIS.zip" % INVERSION_MINS
-
+    """
     mfd = SimpleNamespace(**dict(
         total_rate_m5 = 8.8,
         b_value = 1.0,
@@ -57,9 +57,9 @@ if __name__ == "__main__":
     inversion_runner\
         .setInversionMinutes(INVERSION_MINS)\
         .setEnergyChangeCompletionCriteria(float(0), float(0.001), float(1))\
+        .setNumThreads(12)\
         .setSyncInterval(30)\
         .setRuptureSetFile(inputfile)\
-        .setNumThreads(12)\
         .configure()\
         .runInversion()
 
@@ -84,23 +84,24 @@ if __name__ == "__main__":
 
     info = inversion_runner.parentFaultMomentRates()
     print(info)
+    """
 
-    # print("Setting up hazard")
-    # print("=================")
-    # calc = hazard_calc\
-    #     .setForecastTimespan(50.0)\
-    #     .setSolutionFile(SOLUTION_FILE)\
-    #     .setMaxDistance(250.0)\
-    #     .build()
+    print("Setting up hazard")
+    print("=================")
+    calc = hazard_calc\
+        .setForecastTimespan(50.0)\
+        .setSolutionFile(SOLUTION_FILE)\
+        .setMaxDistance(250.0)\
+        .build()
 
     # t2 = dt.datetime.utcnow()
     # print("took %s secs" % (t2-t1).total_seconds())
 
-    # print("Hazard in Site...")
-    # print("==========================")
-    # masterton = dict(lat=-40.95972, lon=175.6575)
-    # wellington = dict(lat=-41.289, lon=174.777)
-    # result = calc.calc(wellington['lat'], wellington['lon'])
+    print("Hazard in Site...")
+    print("==========================")
+    masterton = dict(lat=-40.95972, lon=175.6575)
+    wellington = dict(lat=-41.289, lon=174.777)
+    result = calc.calc(wellington['lat'], wellington['lon'])
 
     # # print(dir(result))
     # """
@@ -118,10 +119,10 @@ if __name__ == "__main__":
     # 'toString', 'toXMLMetadata', 'wait', 'writeSimpleFuncFile', 'xValues', 'yValues']
     # """
 
-    # fout = open("wgtn_50yr_250km_PGA_inversion_for_%sm_COMBINED_330K." % INVERSION_MINS, 'w')
-    # fout.write(result.getInfo())
-    # fout.write('\n\n')
-    # fout.write(result.toString())
+    fout = open("wgtn_50yr_250km_PGA_inversion_for_%sm_" % INVERSION_MINS, 'w')
+    fout.write(result.getInfo())
+    fout.write('\n\n')
+    fout.write(result.toString())
 
     # t3 = dt.datetime.utcnow()
     # print("took %s secs" % (t3-t2).total_seconds())
