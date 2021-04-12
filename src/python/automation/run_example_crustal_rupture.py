@@ -14,7 +14,7 @@ def run_task(builder,
         ddw, distance, max_cumulative_azimuth, min_sub_sects_per_parent,
         strategy, thinning_factor):
     t0 = dt.datetime.utcnow()
-    outputfile = output_folder.joinpath("ruptset_ddw%s_jump%s_%s_%s_%s_%s_thin%s.zip" %  (ddw,
+    outputfile = output_folder.joinpath("ruptset_DEPTH30_ddw%s_jump%s_%s_%s_%s_%s_thin%s.zip" %  (ddw,
         distance, filekey, max_cumulative_azimuth, min_sub_sects_per_parent, strategy, thinning_factor))
 
     print("building %s started at %s" % (outputfile, dt.datetime.utcnow().isoformat()), end=' ')
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     ddw = 0.5 #, 1.5, 2.0, 2.5]
     min_sub_sects_per_parent = 2 #,3,4]
     max_cumulative_azimuth = 580.0 #, 600.0]
-    thinning_factor = 0.075 #, 0.2, 0.0]
+    thinning_factor = 0.0 #.075 #, 0.2, 0.0]
 
     #test the tests, nomally 1000 for NZ CFM
     max_sections = 1000
