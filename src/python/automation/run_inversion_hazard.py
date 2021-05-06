@@ -34,12 +34,13 @@ def inversion():
         .setRuptureSetFile(inputfile)
 
     # .setGutenbergRichterMFD(mfd.total_rate_m5, mfd.b_value, mfd.mfd_transition_mag, mfd.mfd_num, mfd.mfd_min, mfd.mfd_max)
+    # .setSlipRateConstraint(sliprate_weighting.NORMALIZED_BY_SLIP_RATE, float(100), float(10))\
 
     inversion_runner\
         .setGutenbergRichterMFDWeights(
              float(mfd_equality_constraint_weight),
              float(mfd_inequality_constraint_weight))\
-        .setSlipRateConstraint(sliprate_weighting.NORMALIZED_BY_SLIP_RATE, float(100), float(10))\
+        .setSlipRateUncertaintyConstraint(sliprate_weighting.UNCERTAINTY_ADJUSTED, 1000, 2)\
         .configure()\
         .runInversion()
 
@@ -139,15 +140,17 @@ if __name__ == "__main__":
     #inputfile = "/home/chrisbc/DEV/GNS/opensha/nshm-nz-opensha/data/ruptureSets/ruptset_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_UCERF3_thin0.1.zip"
     #inputfile = "/home/chrisbc/DEV/GNS/opensha/nshm-nz-opensha/data/ruptureSets/ruptset_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_UCERF3_thin0.0.zip"
     inputfile = "/home/chrisbc/DEV/GNS/opensha/nshm-nz-opensha/data/ruptureSets/ruptset_DEPTH30_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_UCERF3_thin0.0.zip"
+    inputfile = "/home/chrisbc/DEV/GNS/opensha/tmp/2021-05-06T04-52-17.049810/ruptset_DEPTH30_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_UCERF3_thin0.0.zip"
     t0 = dt.datetime.utcnow()
 
-    INVERSION_MINS = 185
+    INVERSION_MINS = 240; #185
     #SOLUTION_FILE = "/home/chrisbc/DEV/GNS/opensha/tmp/reports/TestSolution_%sm_CRUSTAL_SANS_TVZ2_BGSEIS.zip" % INVERSION_MINS
     #SOLUTION_FILE = "/home/chrisbc/DEV/GNS/opensha/nshm-nz-opensha/data/inversionSolutions/TestSolution_%sm_CRUSTAL_SANS_TVZ2_BGSEIS_thin0.0.zip" % INVERSION_MINS
     SOLUTION_FILE = "/home/chrisbc/DEV/GNS/opensha/nshm-nz-opensha/data/inversionSolutions/TestSolution_%sm_CRUSTAL_SANS_TVZ2_BGSEIS_thin0.0.zip" % INVERSION_MINS
 
+    inversion()
     print(SOLUTION_FILE)
-    print()
-    hazard()
+    # print()
+    # hazard()
 
     print( "done")

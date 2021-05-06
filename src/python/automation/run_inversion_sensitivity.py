@@ -58,10 +58,11 @@ def run_inversion(mfd_eq_wt, mfd_ineq_wt, output_folder, duration):
                 .setNumThreads(12)\
                 .setSyncInterval(30)
 
+    # .setSlipRateConstraint(sliprate_weighting.NORMALIZED_BY_SLIP_RATE, float(100), float(10))\
     inversion_runner\
         .setRuptureSetFile(RUPTURE_FILE)\
         .setGutenbergRichterMFDWeights(float(mfd_eq_wt), float(mfd_ineq_wt))\
-        .setSlipRateConstraint(sliprate_weighting.NORMALIZED_BY_SLIP_RATE, float(100), float(10))\
+        .setSlipRateUncertaintyConstraint(sliprate_weighting.UNCERTAINTY_ADJUSTED, 1000, 2)\
         .configure()\
         .runInversion()
 
