@@ -14,6 +14,8 @@ from dateutil.tz import tzutc
 from nshm_toshi_client.rupture_generation_task import RuptureGenerationTask
 from nshm_toshi_client.general_task import GeneralTask
 from nshm_toshi_client.task_relation import TaskRelation
+import time
+
 
 API_URL  = os.getenv('TOSHI_API_URL', "http://127.0.0.1:5000/graphql")
 API_KEY = os.getenv('TOSHI_API_KEY', "")
@@ -205,6 +207,9 @@ if __name__ == "__main__":
     config_file = args.config
     f= open(config_file, 'r', encoding='utf-8')
     config = json.load(f)
+
+    # Wait for 5 seconds
+    time.sleep(5) # maybe the JVM App is a little slow to get listening
 
     # print(config)
     task = RuptureSetBuilderTask(config['job_arguments'])

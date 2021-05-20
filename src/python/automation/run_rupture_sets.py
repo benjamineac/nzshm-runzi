@@ -22,8 +22,12 @@ API_URL  = os.getenv('TOSHI_API_URL', "http://127.0.0.1:5000/graphql")
 API_KEY = os.getenv('TOSHI_API_KEY', "")
 S3_URL = os.getenv('TOSHI_S3_URL',"http://localhost:4569")
 
-USE_API = False
+USE_API = True
 JAVA_THREADS = 4
+WORKER_POOL_SIZE = 2
+JVM_HEAP_MAX = 10
+JVM_HEAP_START = 4
+
 
 def run_tasks(general_task_id, models, jump_limits, ddw_ratios, strategies,
             max_cumulative_azimuths, min_sub_sects_per_parents, thinning_factors, max_sections = 1000):
@@ -35,7 +39,8 @@ def run_tasks(general_task_id, models, jump_limits, ddw_ratios, strategies,
     jar_path = "/home/chrisbc/DEV/GNS/opensha-new/nshm-nz-opensha/build/libs/nshm-nz-opensha-all.jar"
     root_folder = "/home/chrisbc/DEV/GNS/opensha-new"
 
-    task_factory = RuptureSetTaskFactory(root_folder, work_path, jre_path=my_jre, app_jar_path=jar_path, task_config_path=work_path)
+    task_factory = RuptureSetTaskFactory(root_folder, work_path, jre_path=my_jre, app_jar_path=jar_path,
+        task_config_path=work_path, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START,)
     task_count = 0
 
     for model in models:
@@ -63,7 +68,8 @@ def run_tasks(general_task_id, models, jump_limits, ddw_ratios, strategies,
                                     max_jump_distance=distance,
                                     max_cumulative_azimuth=max_cumulative_azimuth,
                                     min_sub_sects_per_parent=min_sub_sects_per_parent,
-                                    thinning_factor=thinning_factor
+                                    thinning_factor=thinning_factor,
+                                    scaling_relationship='TMG_CRU_2017', #'SHAW_2009_MOD'
                                     )
 
 
@@ -143,17 +149,20 @@ if __name__ == "__main__":
             agent_name=pwd.getpwuid(os.getuid()).pw_name,
             title="Baseline NZ CFM 0.3 vs 0.9 with UCERF3 defaults",
 
-            description="""With all else being 'standard' UCERF3 settings, build rupture sets from these NZ fault models:
+            description="""With 'typical' UCERF3 settings, build rupture sets from these NZ fault models:
 
 permutations:
  - thinning_factors = [0.0, 0.1]
  - models = ["CFM_0_3_SANSTVZ", "CFM_0_9_SANSTVZ_D90", "CFM_0_9_ALL_D90"]
 
-NB "SANSTVZ" means without Taupo Volcanic Zone faults. Note that a few TVZ faults are re-included in the CFM0.9 version Fault model."""
+NB "SANSTVZ" means without Taupo Volcanic Zone faults. Note that a few TVZ faults are re-included in the CFM0.9 version Fault model.
+
+Using TMG_CRU_2017 scaling relationship.
+"""
         )
 
     ##Test parameters
-    models = ["CFM_0_3_SANSTVZ", "CFM_0_9_SANSTVZ_D90", "CFM_0_9_ALL_D90"]
+    models = ["CFM_0_3_SANSTVZ", "CFM_0_9_SANSTVZ_D90"] #, "CFM_0_9_ALL_D90"]
     strategies = ['UCERF3', ] #'POINTS'] #, 'UCERF3' == DOWNDIP]
     jump_limits = [5.0,] #4.0, 4.5, 5.0, 5.1] # , 5.1, 5.2, 5.3]
     ddw_ratios = [0.5,] # 1.0, 1.5, 2.0, 2.5]
@@ -164,9 +173,8 @@ NB "SANSTVZ" means without Taupo Volcanic Zone faults. Note that a few TVZ fault
     #limit test size, nomally 1000 for NZ CFM
     max_sections = 2000
 
-    #Run the tasks....
-    #actually run them ....
-    pool = Pool(JAVA_THREADS)
+
+    pool = Pool(WORKER_POOL_SIZE)
 
     scripts = []
     for script_file in run_tasks(general_task_id, models,

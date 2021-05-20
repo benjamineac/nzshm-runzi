@@ -20,7 +20,9 @@ import scaling.rupture_set_builder_task
 
 class RuptureSetTaskFactory():
 
-    def __init__(self, root_path, working_path, jre_path=None, app_jar_path=None, task_config_path=None, pbs_script=False, initial_gateway_port=25333, pbs_ppn=8, pbs_wall_hours=24):
+    def __init__(self, root_path, working_path, jre_path=None, app_jar_path=None, task_config_path=None,
+        pbs_script=False, initial_gateway_port=25333, pbs_ppn=8, pbs_wall_hours=24,
+        jvm_heap_start=3, jvm_heap_max=10):
         """
         pbs_script: boolean is this a PBS job?
         initial_gateway_port: what port to start incrementing from
@@ -39,8 +41,8 @@ class RuptureSetTaskFactory():
         self._root_path = root_path #path containing the git repos
         self._working_path = working_path
 
-        self._jvm_heap_start_gb = 4
-        self._jvm_heap_max_gb = 12
+        self._jvm_heap_start_gb = jvm_heap_start
+        self._jvm_heap_max_gb = jvm_heap_max
         self._python = 'python'
 
 
