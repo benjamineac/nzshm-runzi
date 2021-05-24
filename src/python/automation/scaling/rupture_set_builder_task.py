@@ -17,9 +17,9 @@ from nshm_toshi_client.task_relation import TaskRelation
 import time
 
 
-API_URL  = os.getenv('TOSHI_API_URL', "http://127.0.0.1:5000/graphql")
-API_KEY = os.getenv('TOSHI_API_KEY', "")
-S3_URL = os.getenv('TOSHI_S3_URL',"http://localhost:4569")
+API_URL  = os.getenv('NZSHM22_TOSHI_API_URL', "http://127.0.0.1:5000/graphql")
+API_KEY = os.getenv('NZSHM22_TOSHI_API_KEY', "")
+S3_URL = os.getenv('NZSHM22_TOSHI_S3_URL',"http://localhost:4569")
 
 class RuptureSetBuilderTask():
     """
@@ -147,9 +147,6 @@ class RuptureSetBuilderTask():
             pyth_log_file = self._output_folder.joinpath(f"python_script.{job_arguments['java_gateway_port']}.log")
             self._ruptgen_api.upload_task_file(task_id, pyth_log_file, 'WRITE')
 
-        print("building %s started at %s" % (outputfile, dt.datetime.utcnow().isoformat()), end=' ')
-
-
         print("; took %s secs" % (dt.datetime.utcnow() - t0).total_seconds())
 
 
@@ -208,8 +205,10 @@ if __name__ == "__main__":
     f= open(config_file, 'r', encoding='utf-8')
     config = json.load(f)
 
-    # Wait for 5 seconds
-    time.sleep(5) # maybe the JVM App is a little slow to get listening
+    # maybe the JVM App is a little slow to get listening
+    time.sleep(5)
+    # Wait for some more time, scaled by taskid to avoid S3 consistency issue
+    time.sleep(config['job_arguments']['task_id'] * 0.333 * 2 * 2)
 
     # print(config)
     task = RuptureSetBuilderTask(config['job_arguments'])
