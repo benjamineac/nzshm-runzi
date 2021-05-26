@@ -16,11 +16,11 @@ The job is responsible for
 """
 import os
 import json
-import scaling.rupture_set_builder_task
+# import scaling.rupture_set_builder_task
 
 class OpenshaTaskFactory():
 
-    def __init__(self, root_path, working_path,  python_script=None, jre_path=None, app_jar_path=None, task_config_path=None,
+    def __init__(self, root_path, working_path,  python_script_module, jre_path=None, app_jar_path=None, task_config_path=None,
         pbs_script=False, initial_gateway_port=25333, pbs_ppn=8, pbs_wall_hours=24,
         python='python',
         jvm_heap_start=3, jvm_heap_max=10):
@@ -37,7 +37,8 @@ class OpenshaTaskFactory():
         self._jre_path = jre_path or "/opt/sw/java/java-11-openjdk-amd64/bin/java"
         self._app_jar_path = app_jar_path or "~/NSHM/opensha/nshm-nz-opensha/build/libs/nshm-nz-opensha-all.jar"
         self._config_path = task_config_path or os.getcwd()
-        self._script_path = os.path.dirname(scaling.rupture_set_builder_task.__file__) #path to the actual task script
+        # self._script_path = os.path.dirname(scaling.rupture_set_builder_task.__file__) #path to the actual task script
+        self._python_script = os.path.abspath(python_script_module.__file__)
 
         self._root_path = root_path #path containing the git repos
         self._working_path = working_path
@@ -45,7 +46,7 @@ class OpenshaTaskFactory():
         self._jvm_heap_start_gb = jvm_heap_start
         self._jvm_heap_max_gb = jvm_heap_max
         self._python = python
-        self._python_script = python_script or 'rupture_set_builder_task.py'
+        # self._python_script = python_script or 'rupture_set_builder_task.py'
 
 
     def write_task_config(self, task_arguments, job_arguments):
@@ -77,7 +78,7 @@ export NZSHM22_APP_PORT={self._next_port}
 
 cd {self._root_path}
 java -Xms{self._jvm_heap_start_gb}G -Xmx{self._jvm_heap_max_gb}G -classpath ${{JAVA_CLASSPATH}} ${{CLASSNAME}} > {self._working_path}/java_app.{self._next_port}.log &
-{self._python} {self._script_path}/{self._python_script} {self._config_path}/config.{self._next_port}.json > {self._working_path}/python_script.{self._next_port}.log
+{self._python} {self._python_script} {self._config_path}/config.{self._next_port}.json > {self._working_path}/python_script.{self._next_port}.log
 
 #Kill the Java gateway server
 kill -9 $!

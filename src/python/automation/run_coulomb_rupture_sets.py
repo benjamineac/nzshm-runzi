@@ -11,59 +11,50 @@ from dateutil.tz import tzutc
 
 from nshm_toshi_client.general_task import GeneralTask
 from scaling.opensha_task_factory import OpenshaTaskFactory
+import scaling.azimuthal_rupture_set_builder_task
+import scaling.coulomb_rupture_set_builder_task
+
 
 # Set up your local config, from environment variables, with some sone defaults
-from local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
+from scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
     JVM_HEAP_MAX, JVM_HEAP_START, USE_API, JAVA_THREADS,
     API_KEY, API_URL, S3_URL, CLUSTER_MODE)
 
 # If you wish to override something in the main config, do so here ..
-# WORKER_POOL_SIZE = 3
 WORKER_POOL_SIZE = 3
 
 #If using API give this task a descriptive setting...
 
-TASK_TITLE = "CLUSTER 2.4 Baseline NZ CFM 0.3 vs 0.9 with UCERF3 defaults"
+TASK_TITLE = "Build Coulomb NZ CFM 0.3 vs 0.9 with current UCERF4 defaults"
 
 TASK_DESCRIPTION = """
-With 'typical' UCERF3 settings, build rupture sets from NZ fault models
+With recent UCERF4-like  settings, build rupture sets from NZ fault models
 
-NOW 160 tasks w + 1.333 task interval
-
-testing read/write consistency
 """
 
-def build_tasks(general_task_id, models, jump_limits, ddw_ratios, strategies,
-            max_cumulative_azimuths, min_sub_sects_per_parents, thinning_factors,
+def build_tasks(general_task_id, models, jump_limits, thinning_factors,
             max_sections = 1000):
     """
     build the shell scripts 1 per task, based on all the inputs
 
     """
     task_count = 0
-    task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, jre_path=OPENSHA_JRE, app_jar_path=FATJAR,
+    task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, scaling.coulomb_rupture_set_builder_task,
+        jre_path=OPENSHA_JRE, app_jar_path=FATJAR,
         task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START,
         pbs_script=CLUSTER_MODE)
 
-    for (model, strategy, distance, max_cumulative_azimuth, min_sub_sects_per_parent,
-        ddw, thinning_factor)in itertools.product(
-            models, strategies, jump_limits, max_cumulative_azimuths, min_sub_sects_per_parents,
-            ddw_ratios, thinning_factors):
+    for (model, max_jump_distance, thinning_factor)in itertools.product(
+            models, jump_limits, thinning_factors):
 
         task_count +=1
 
         task_arguments = dict(
             max_sections=max_sections,
-            down_dip_width=ddw,
-            connection_strategy=strategy,
-            crustal_filename=None,
-            filekey=None,
             fault_model=model, #instead of filename. filekey
-            max_jump_distance=distance,
-            max_cumulative_azimuth=max_cumulative_azimuth,
-            min_sub_sects_per_parent=min_sub_sects_per_parent,
+            max_jump_distance=max_jump_distance,
             thinning_factor=thinning_factor,
-            scaling_relationship='TMG_CRU_2017', #'SHAW_2009_MOD'
+            scaling_relationship='TMG_CRU_2017', #'SHAW_2009_MOD' TODO this is currenlty not a settable parameter!
             )
 
 
@@ -90,6 +81,9 @@ def build_tasks(general_task_id, models, jump_limits, ddw_ratios, strategies,
 
         yield str(script_file_path)
 
+        #testing
+        return
+
 
 if __name__ == "__main__":
 
@@ -110,22 +104,17 @@ if __name__ == "__main__":
 
     ##Test parameters
     models = ["CFM_0_3_SANSTVZ", "CFM_0_9_SANSTVZ_D90"] #, "CFM_0_9_ALL_D90"]
-    strategies = ['UCERF3', ] #'POINTS'] #, 'UCERF3' == DOWNDIP]
-    jump_limits = [4.0, 4.5, 5.0, 5.1] #4.0, 4.5, 5.0, 5.1] # , 5.1, 5.2, 5.3]
-    ddw_ratios = [0.5,] # 1.0, 1.5, 2.0, 2.5]
-    min_sub_sects_per_parents = [2,] #3,4]
-    max_cumulative_azimuths = [560.0, 570.0, 580, 590.0, 600] # 580.0, 600.0]
-    thinning_factors = [0.05, 0.1, 0.2, 0.3] #, 0.05, 0.1, 0.2]
+    jump_limits = [15, ] #4.0, 4.5, 5.0, 5.1] #4.0, 4.5, 5.0, 5.1] # , 5.1, 5.2, 5.3]
+    thinning_factors = [0.0, ] #5, 0.1, 0.2, 0.3] #, 0.05, 0.1, 0.2]
 
     #limit test size, nomally 1000 for NZ CFM
-    MAX_SECTIONS = 2000
+    MAX_SECTIONS = 100
 
     pool = Pool(WORKER_POOL_SIZE)
 
     scripts = []
     for script_file in build_tasks(GENERAL_TASK_ID,
-        models, jump_limits, ddw_ratios, strategies,
-        max_cumulative_azimuths, min_sub_sects_per_parents,
+        models, jump_limits,
         thinning_factors, MAX_SECTIONS):
         scripts.append(script_file)
 
