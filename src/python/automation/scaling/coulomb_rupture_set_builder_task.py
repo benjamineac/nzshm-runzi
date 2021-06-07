@@ -157,7 +157,7 @@ if __name__ == "__main__":
         # maybe the JVM App is a little slow to get listening
         time.sleep(5)
         # Wait for some more time, scaled by taskid to avoid S3 consistency issue
-        time.sleep(config['job_arguments']['task_id'] * 0.333 * 2 * 2)
+        time.sleep(config['job_arguments']['task_id'] * 0.333 * 2 * 2 *2)
 
     # print(config)
     task = RuptureSetBuilderTask(config['job_arguments'])

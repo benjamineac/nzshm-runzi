@@ -1,9 +1,7 @@
 import argparse
 import json
 import git
-import csv
 import os
-import pwd
 from pathlib import PurePath
 import platform
 
@@ -65,9 +63,12 @@ class BuilderTask():
 
             #link task tp the parent task
             self._task_relation_api.create_task_relation(job_arguments['general_task_id'], task_id)
-            # #link task to the input datafile (*.XML)
-            # self._ruptgen_api.link_task_file(task_id, crustal_id, 'READ')
-            pass
+
+            # #link task to the input datafile
+            input_file_id = task_arguments.get('rupture_set_file_id')
+            if input_file_id:
+                self._ruptgen_api.link_task_file(task_id, input_file_id, 'READ')
+
         else:
             task_id = None
 
@@ -82,7 +83,7 @@ class BuilderTask():
             .setNumThreads(int(job_arguments["java_threads"]))\
             .setSyncInterval(30)\
             .setRuptureSetFile(str(PurePath(job_arguments['working_path'], ta['rupture_set'])))
-            
+
         mfd = SimpleNamespace(**dict(
             total_rate_m5 = 8.8,
             b_value = 1.0,

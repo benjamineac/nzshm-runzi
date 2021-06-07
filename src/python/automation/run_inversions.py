@@ -10,10 +10,16 @@ import datetime as dt
 from dateutil.tz import tzutc
 
 from nshm_toshi_client.general_task import GeneralTask
+from nshm_toshi_client.toshi_file import ToshiFile
+
 from scaling.opensha_task_factory import OpenshaTaskFactory
+from scaling.file_utils import download_files
+
+import scaling.inversion_solution_builder_task
+
 
 # Set up your local config, from environment variables, with some sone defaults
-from local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
+from scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
     JVM_HEAP_MAX, JVM_HEAP_START, USE_API, JAVA_THREADS,
     API_KEY, API_URL, S3_URL, CLUSTER_MODE)
 
@@ -25,30 +31,30 @@ JAVA_THREADS = 4
 USE_API = True
 
 #If using API give this task a descriptive setting...
-TASK_TITLE = "Baseline Inversion energy completion"
+TASK_TITLE = "Baseline Inversion - Coulomb"
 TASK_DESCRIPTION = """
-Test inversion energy Completion impacts:
-
-Fixed duration comparisons
+- Coulomb rupture sets
+- Fixed duration comparisons
 """
 
 def run_tasks(general_task_id, rupture_sets, completion_energies, max_inversion_times):
     task_count = 0
-    task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, python_script="inversion_solution_builder_task.py",
+    task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, scaling.inversion_solution_builder_task,
         jre_path=OPENSHA_JRE, app_jar_path=FATJAR,
         task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START,
         pbs_script=CLUSTER_MODE)
 
     for round in rounds:
-        for (rid, rupture_set) in rupture_sets.items():
+        for (rid, rupture_set_info) in rupture_sets.items():
             for completion_energy in completion_energies:
                 for max_inversion_time in max_inversion_times:
-    
+
                     task_count +=1
-    
-                    task_arguments = dict(                     
+
+                    task_arguments = dict(
                         round = round,
-                        rupture_set=rupture_set,
+                        rupture_set_file_id=rupture_set_info['id'],
+                        rupture_set=PurePath(rupture_set_info['filepath']).name,
                         completion_energy=completion_energy,
                         max_inversion_time=max_inversion_time,
                         )
@@ -67,9 +73,8 @@ def run_tasks(general_task_id, rupture_sets, completion_energies, max_inversion_
 
                     #write a config
                     task_factory.write_task_config(task_arguments, job_arguments)
-    
-                    script = task_factory.get_task_script()
 
+                    script = task_factory.get_task_script()
 
                     script_file_path = PurePath(WORK_PATH, f"task_{task_count}.sh")
                     with open(script_file_path, 'w') as f:
@@ -91,6 +96,12 @@ if __name__ == "__main__":
     if USE_API:
         headers={"x-api-key":API_KEY}
         general_api = GeneralTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
+        file_api = ToshiFile(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
+
+        #get input files from API
+        upstream_task_id = "R2VuZXJhbFRhc2s6NjI3M2E5QWc="
+        rupture_sets = download_files(general_api, file_api, upstream_task_id, str(WORK_PATH), overwrite=True)
+
         #create new task in toshi_api
         GENERAL_TASK_ID = general_api.create_task(
             created=dt.datetime.now(tzutc()).isoformat(),
@@ -99,18 +110,24 @@ if __name__ == "__main__":
             description=TASK_DESCRIPTION
         )
 
-    ##Parameters
-    rupt_folder = "/home/chrisch/NSHM/opensha-new/work/save/"
-    rupture_sets = {
-        "CFM09_tf0.0": rupt_folder + "RupSet_Az_FM(CFM_0_9_SANSTVZ_D90)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.0).zip",
-        "CFM09_tf0.1": rupt_folder +"RupSet_Az_FM(CFM_0_9_SANSTVZ_D90)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.1).zip",
-        "CFM03_tf0.0": rupt_folder +"RupSet_Az_FM(CFM_0_3_SANSTVZ)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.0).zip",
-        "CFM03_tf0.1": rupt_folder +"RupSet_Az_FM(CFM_0_3_SANSTVZ)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.1).zip",
-    }
+        print("GENERAL_TASK_ID:", GENERAL_TASK_ID)
 
-    rounds = range(3)
+
+    #print( rupture_sets )
+    #assert 0
+
+    # ##Parameters
+    # rupt_folder = "/home/chrisch/NSHM/opensha-new/work/save/"
+    # rupture_sets = {
+    #     "CFM09_tf0.0": rupt_folder + "RupSet_Az_FM(CFM_0_9_SANSTVZ_D90)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.0).zip",
+    #     "CFM09_tf0.1": rupt_folder +"RupSet_Az_FM(CFM_0_9_SANSTVZ_D90)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.1).zip",
+    #     "CFM03_tf0.0": rupt_folder +"RupSet_Az_FM(CFM_0_3_SANSTVZ)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.0).zip",
+    #     "CFM03_tf0.1": rupt_folder +"RupSet_Az_FM(CFM_0_3_SANSTVZ)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.1).zip",
+    # }
+
+    rounds = range(2)
     completion_energies = [0.000001,] #, 0.2] # 0.1, 0.001]
-    max_inversion_times = [10, 30, 60, 120, 4*60, 8*60, 16*60,]  #units are minutes
+    max_inversion_times = [30, 8*60, ]# 30, 60, 120, 4*60, 8*60, 16*60,]  #units are minutes
     max_inversion_times.reverse()
 
     pool = Pool(WORKER_POOL_SIZE)

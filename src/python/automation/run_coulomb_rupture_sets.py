@@ -25,10 +25,10 @@ WORKER_POOL_SIZE = 3
 
 #If using API give this task a descriptive setting...
 
-TASK_TITLE = "Build Coulomb NZ CFM 0.3 vs 0.9 with current UCERF4 defaults"
+TASK_TITLE = "Build Coulomb NZ CFM 0.3 & 0.9 with current UCERF4 defaults"
 
 TASK_DESCRIPTION = """
-With recent UCERF4-like  settings, build rupture sets from NZ fault models
+With recent UCERF4-like settings, build rupture sets from NZ fault models
 
 """
 
@@ -55,6 +55,7 @@ def build_tasks(general_task_id, models, jump_limits, thinning_factors,
             max_jump_distance=max_jump_distance,
             thinning_factor=thinning_factor,
             scaling_relationship='TMG_CRU_2017', #'SHAW_2009_MOD' TODO this is currenlty not a settable parameter!
+            short_name=f'{model}-{thinning_factor}',
             )
 
 
@@ -82,7 +83,7 @@ def build_tasks(general_task_id, models, jump_limits, thinning_factors,
         yield str(script_file_path)
 
         #testing
-        return
+        #return
 
 
 if __name__ == "__main__":
@@ -102,13 +103,15 @@ if __name__ == "__main__":
             description=TASK_DESCRIPTION
         )
 
+        print("GENERAL_TASK_ID:", GENERAL_TASK_ID)
+
     ##Test parameters
     models = ["CFM_0_3_SANSTVZ", "CFM_0_9_SANSTVZ_D90"] #, "CFM_0_9_ALL_D90"]
     jump_limits = [15, ] #4.0, 4.5, 5.0, 5.1] #4.0, 4.5, 5.0, 5.1] # , 5.1, 5.2, 5.3]
-    thinning_factors = [0.0, ] #5, 0.1, 0.2, 0.3] #, 0.05, 0.1, 0.2]
+    thinning_factors = [0.0, 0.1] #5, 0.1, 0.2, 0.3] #, 0.05, 0.1, 0.2]
 
     #limit test size, nomally 1000 for NZ CFM
-    MAX_SECTIONS = 100
+    MAX_SECTIONS = 2000
 
     pool = Pool(WORKER_POOL_SIZE)
 
