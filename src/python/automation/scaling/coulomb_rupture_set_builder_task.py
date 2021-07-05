@@ -65,7 +65,10 @@ class RuptureSetBuilderTask():
         environment = {
             "host": platform.node(),
             "gitref_opensha":self._repoheads['opensha'],
-            "gitref_nshm-nz-opensha":self._repoheads['nshm-nz-opensha'] }
+            "gitref_nshm-nz-opensha":self._repoheads['nshm-nz-opensha'],
+            "java_threads": job_arguments["java_threads"],
+            "proc_count": job_arguments["PROC_COUNT"], 
+            "jvm_heap_max": job_arguments["JVM_HEAP_MAX"] }
 
         if self.use_api:
             #create new task in toshi_api
@@ -89,11 +92,13 @@ class RuptureSetBuilderTask():
         assert self._builder
         print('Got RuptureSetBuilder: ', self._builder)
 
-
         self._builder \
             .setMaxFaultSections(int(ta["max_sections"]))\
             .setMaxJumpDistance(float(ta["max_jump_distance"]))\
+            .setAdaptiveMinDist(float(ta["adaptive_min_distance"]))\
             .setAdaptiveSectFract(float(ta["thinning_factor"]))\
+            .setMinSubSectsPerParent(int(ta["min_sub_sects_per_parent"]))\
+            .setMinSubSections(int(ta["min_sub_sections"]))\
             .setFaultModel(ta["fault_model"])
 
         #name the output file
@@ -156,7 +161,7 @@ if __name__ == "__main__":
         # maybe the JVM App is a little slow to get listening
         time.sleep(5)
         # Wait for some more time, scaled by taskid to avoid S3 consistency issue
-        time.sleep(config['job_arguments']['task_id'] * 0.333 * 2 * 2 *2)
+        time.sleep(config['job_arguments']['task_id'] * 5)
 
     # print(config)
     task = RuptureSetBuilderTask(config['job_arguments'])

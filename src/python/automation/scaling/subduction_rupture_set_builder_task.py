@@ -16,6 +16,7 @@ from nshm_toshi_client.general_task import GeneralTask
 from nshm_toshi_client.task_relation import TaskRelation
 import time
 
+CLUSTER_MODE = os.getenv('NZSHM22_SCRIPT_CLUSTER_MODE', False)
 
 API_URL  = os.getenv('NZSHM22_TOSHI_API_URL', "http://127.0.0.1:5000/graphql")
 API_KEY = os.getenv('NZSHM22_TOSHI_API_KEY', "")
@@ -32,18 +33,12 @@ class RuptureSetBuilderTask():
         #setup the java gateway binding
         gateway = JavaGateway(gateway_parameters=GatewayParameters(port=job_args['java_gateway_port']))
         app = gateway.entry_point
-        self._builder = app.getAzimuthalRuptureSetBuilder()
-
-        #get the root path for the task local data
-        # root_folder = PurePath(os.getcwd())
+        self._builder = app.getSubductionRuptureSetBuilder()
 
         repos = ["opensha", "nshm-nz-opensha"]
-        #repo_root = root_folder
         self._output_folder = PurePath(job_args.get('working_path')) #.joinpath('tmp').joinpath(dt.datetime.utcnow().isoformat().replace(':','-'))
-        # os.mkdir(self._output_folder)
 
         #setup the csv (backup) task recorder
-        self._writer = None #CSVResultWriter(open(self._output_folder.joinpath('results.csv'), 'w'), repos)
         self._repoheads = get_repo_heads(PurePath(job_args['root_folder']), repos)
 
         if self.use_api:
@@ -52,21 +47,10 @@ class RuptureSetBuilderTask():
             self._general_api = GeneralTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
             self._task_relation_api = TaskRelation(API_URL, None, with_schema_validation=True, headers=headers)
 
-
     def ruptureSetMetrics(self):
         metrics = {}
         metrics["subsection_count"] = self._builder.getSubSections().size()
         metrics["rupture_count"] = self._builder.getRuptures().size()
-        #metrics["possible_cluster_connections"] = conf.getConnectionStrategy().getClusterConnectionCount()
-
-        # # get info from the configuratiion
-        conf = self._builder.getPlausibilityConfig()
-        conf_diags = json.loads(conf.toJSON())
-        conns = 0
-        for cluster in conf_diags['connectionStrategy']['clusters']:
-            conns += len(cluster.get('connections',[]))
-        metrics["cluster_connections"] = conns
-
         return metrics
 
     def run(self, task_arguments, job_arguments):
@@ -79,7 +63,10 @@ class RuptureSetBuilderTask():
         environment = {
             "host": platform.node(),
             "gitref_opensha":self._repoheads['opensha'],
-            "gitref_nshm-nz-opensha":self._repoheads['nshm-nz-opensha'] }
+            "gitref_nshm-nz-opensha":self._repoheads['nshm-nz-opensha'],
+            "java_threads": job_arguments["java_threads"],
+            "proc_count": job_arguments["PROC_COUNT"],
+            "jvm_heap_max": job_arguments["JVM_HEAP_MAX"] }
 
         if self.use_api:
             #create new task in toshi_api
@@ -99,17 +86,18 @@ class RuptureSetBuilderTask():
 
         # Run the task....
         ta = task_arguments
-        ## for crustal
+
+        assert self._builder
+        print('Got RuptureSetBuilder: ', self._builder)
+
         self._builder \
-            .setMaxFaultSections(int(ta["max_sections"]))\
-            .setMaxJumpDistance(float(ta["max_jump_distance"]))\
-            .setPermutationStrategy(ta["connection_strategy"])\
-            .setMaxSubSectionLength(float(ta["down_dip_width"]))\
-            .setMinSubSectsPerParent(int(ta["min_sub_sects_per_parent"]))\
-            .setMinSubSections(int(ta["min_sub_sections"]))\
-            .setMaxCumulativeAzimuthChange(float(ta["max_cumulative_azimuth"]))\
-            .setThinningFactor(float(ta["thinning_factor"]))\
-            .setFaultModel(ta["fault_model"])
+            .setDownDipAspectRatio(ta['min_aspect_ratio'], ta['max_aspect_ratio'], ta['aspect_depth_threshold'])\
+            .setDownDipMinFill(ta['min_fill_ratio'])\
+            .setDownDipPositionCoarseness(ta['growth_position_epsilon'])\
+            .setDownDipSizeCoarseness(ta['growth_size_epsilon'])\
+            .setScalingRelationship(ta['scaling_relationship'])\
+            .setSlipAlongRuptureModel(ta['slip_along_rupture_model'])\
+            .setFaultModel(ta['fault_model'])
 
         #name the output file
         outputfile = self._output_folder.joinpath(self._builder.getDescriptiveName()+ ".zip")
@@ -167,10 +155,11 @@ if __name__ == "__main__":
     f= open(config_file, 'r', encoding='utf-8')
     config = json.load(f)
 
-    # maybe the JVM App is a little slow to get listening
-    time.sleep(5)
-    # Wait for some more time, scaled by taskid to avoid S3 consistency issue
-    time.sleep(config['job_arguments']['task_id'] * 5)
+    if CLUSTER_MODE:
+        # maybe the JVM App is a little slow to get listening
+        time.sleep(5)
+        # Wait for some more time, scaled by taskid to avoid S3 consistency issue
+        time.sleep(config['job_arguments']['task_id'] * 5)
 
     # print(config)
     task = RuptureSetBuilderTask(config['job_arguments'])

@@ -17,8 +17,12 @@ import base64
 import json
 import collections
 from copy import copy
+# Set up your local config, from environment variables, with some sone defaults
+from scaling.local_config import WORK_PATH
 
-class ReportMetaBuilder():
+TUI = "http://simple-toshi-ui.s3-website-ap-southeast-2.amazonaws.com/"
+
+class NamedFaultIndexBuilder():
     """
     find the metadata.json and make this available for the HTML
     """
@@ -49,9 +53,9 @@ class ReportMetaBuilder():
                         'short_name': 'CFM_0_9_SANSTVZ_D90-0.1', 'rupture_class': 'Azimuth', 'max_inversion_time': '1380', 'completion_energy': '0.05', 'round_number': '0'}
                         '''
 
-                        solution_name = PurePath( value['task_arguments']['solution_file']).name
+                        solution_name = PurePath( value['task_arguments']['file_path']).name
                         #print(solution_name)
-                        solution_filepath = Path(folder_path, '..', value['task_arguments']['generation_task_id'], solution_name).resolve()
+                        solution_filepath = Path(folder_path, '..', value['task_arguments']['file_id'], solution_name).resolve()
                         #print(solution_filepath)
 
                         info = dict(
@@ -106,7 +110,7 @@ class ReportMetaBuilder():
 
         m = solution_info['meta']
 
-        report_info  = f"{m['short_name']} {m['rupture_class']} energy({m['completion_energy']}) round({m['round_number']})"
+        report_info  = "" #f"{m['short_name']} {m['rupture_class']} energy({m['completion_energy']}) round({m['round_number']})"
         list_insertion = "".join([self.link_li_template(title, path) for (title, path) in self.build_image_index(Path(self._dir_name, solution_info['index_path'], mfd_folder))])
         img_insertion = "".join([self.plot_div_template(title, path) for (title, path) in self.build_image_index(Path(self._dir_name, solution_info['index_path'], mfd_folder))])
 
@@ -118,8 +122,8 @@ class ReportMetaBuilder():
             <head></head>
                 <div>
                 <h1 id="top" >NZSHM22 Named Fault MFD plots: <strong>{mfd_folder}</strong> </h1>
-                <p>{report_info}</p>
-                <p>ID: {m['rupture_set_file_id']} </p>
+                <!--<p>{report_info}</p>-->
+                <p>ID: {m['file_id']} </p>
                 <ul>
                 {list_insertion}
                 </ul>
@@ -138,7 +142,7 @@ class ReportMetaBuilder():
     def main_index_template(self, solution_info, links):
 
         m = solution_info['meta']
-        report_info  = f"{m['short_name']} {m['rupture_class']} energy({m['completion_energy']}) round({m['round_number']})"
+        report_info  = "" #f"{m['short_name']} {m['rupture_class']} energy({m['completion_energy']}) round({m['round_number']})"
         list_insertion = "".join([self.nav_li_template(link, link +'-index.html') for link in links])
 
         if len(list_insertion) == 0:
@@ -151,9 +155,9 @@ class ReportMetaBuilder():
                 <div>
                 <h1 id="top" >NZSHM22 Named Fault MFD plots</strong> </h1>
 
-                <p>{report_info}</p>
+                <!--<p>{report_info}</p>-->
 
-                <p>ID: {m['rupture_set_file_id']} </p>
+                <p>ID: {m['file_id']}  <a href="{TUI}FileDetail/{m['file_id']}">file detail</a></p>
 
                 <ul>
                 {list_insertion}
@@ -188,21 +192,14 @@ class ReportMetaBuilder():
         return links
 
 def main():
-    #ReportMetaBuilder
-    meta_builder = ReportMetaBuilder(
-        path = '/home/chrisbc/DEV/GNS/opensha-new/2021-06-01-01')
+    #NamedFaultIndexBuilder
+    meta_builder = NamedFaultIndexBuilder(path = WORK_PATH)
 
-    def sort_fn(info):
-        key = info['meta']['short_name']
-        key += info['meta']['rupture_class']
-        key += info['meta']['completion_energy']
-        return key
-
-    solution_infos = sorted(meta_builder.build(), key=sort_fn)
+    solution_infos = meta_builder.build()
     for info in solution_infos:
         if len(meta_builder.build_mfd_indexes(info)) > 0:
             #list of folders for main index
-            print(info["meta"]["rupture_set_file_id"])
+            print(info["meta"]["file_id"])
         # else:
         #     print("skip " + info["meta"]["rupture_set_file_id"])
 

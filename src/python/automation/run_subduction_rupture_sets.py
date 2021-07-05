@@ -1,3 +1,6 @@
+"""
+Configuration for building subduction rupture sets.
+"""
 import os
 import pwd
 import itertools
@@ -11,8 +14,8 @@ from dateutil.tz import tzutc
 
 from nshm_toshi_client.general_task import GeneralTask
 from scaling.opensha_task_factory import OpenshaTaskFactory
-import scaling.azimuthal_rupture_set_builder_task
-import scaling.coulomb_rupture_set_builder_task
+
+import scaling.subduction_rupture_set_builder_task
 
 
 # Set up your local config, from environment variables, with some sone defaults
@@ -25,54 +28,54 @@ WORKER_POOL_SIZE = 2
 
 
 #If using API give this task a descriptive setting...
-TASK_TITLE = "Build Coulomb Stirling CFM 0.9 ruptsets win increasd min subsections"
+TASK_TITLE = "Build Hikurangi/Kermadec ruptsets 30km"
 
-TASK_DESCRIPTION = """Coulomb ruptures with Stirling - perhaps 60GB is enough?
+TASK_DESCRIPTION = """
 
-With fewer cores and < 64GB we should get two jobs running per cluster node.
-
-Here we vary the thinning and the min_sub_sections to see effects on rupture count:
-
- - models = [CFM_0_9_SANSTVZ_2010,]
- - jump_limits = [15,]
- - adaptive_min_distances = [6,]
- - thinning_factors = [0.0,0.1,0.2]
- - min_sub_sects_per_parents = [2,]
- - min_sub_sections = [2,3,4,5]
+ - models = [SBD_0_1_HKR_KRM_30]
+ - min_aspect_ratio = 2.0
+ - max_aspect_ratio = 5.0
+ - aspect_depth_threshold = 5
+ - min_fill_ratios = [0.2, 0.1,]
+ - growth_position_epsilons = [0.0]
+ - growth_size_epsilons = [0.01, 0.005, 0.0]
+ - scaling_relationships = ['TMG_SUB_2017']
 
 """
 
 
-def build_tasks(general_task_id, models, min_sub_sects_per_parents, min_sub_sections_list, jump_limits, adaptive_min_distances, thinning_factors,
-            max_sections = 1000):
+def build_tasks(general_task_id, mmodels, min_aspect_ratios, max_aspect_ratios, aspect_depth_thresholds, min_fill_ratios,
+            growth_position_epsilons, growth_size_epsilons, scaling_relationships):
     """
     build the shell scripts 1 per task, based on all the inputs
 
     """
     task_count = 0
-    task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, scaling.coulomb_rupture_set_builder_task,
+    task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, scaling.subduction_rupture_set_builder_task,
         initial_gateway_port=25733,
         jre_path=OPENSHA_JRE, app_jar_path=FATJAR,
         task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START,
         pbs_ppn=JAVA_THREADS,
         pbs_script=CLUSTER_MODE)
 
-    for (model, min_sub_sects_per_parent, min_sub_sections, max_jump_distance, adaptive_min_distance, thinning_factor) in itertools.product(
-            models, min_sub_sects_per_parents, min_sub_sections_list, jump_limits, adaptive_min_distances, thinning_factors):
+    for (model, min_aspect_ratio, max_aspect_ratio, aspect_depth_threshold,
+            min_fill_ratio, growth_position_epsilon, growth_size_epsilon, scaling_relationship) in itertools.product(
+            models, min_aspect_ratios, max_aspect_ratios, aspect_depth_thresholds, min_fill_ratios,
+            growth_position_epsilons, growth_size_epsilons, scaling_relationships):
 
         task_count +=1
 
         task_arguments = dict(
-            max_sections=max_sections,
-            fault_model=model, #instead of filename. filekey
-            min_sub_sects_per_parent=min_sub_sects_per_parent,
-            min_sub_sections=min_sub_sections,
-            max_jump_distance=max_jump_distance,
-            adaptive_min_distance=adaptive_min_distance,
-            thinning_factor=thinning_factor,
-            scaling_relationship='TMG_CRU_2017', #'SHAW_2009_MOD' TODO this is currently not a settable parameter!
+            fault_model=model,
+            min_aspect_ratio = min_aspect_ratio,
+            max_aspect_ratio = max_aspect_ratio,
+            aspect_depth_threshold = aspect_depth_threshold,
+            min_fill_ratio = min_fill_ratio,
+            growth_position_epsilon = growth_position_epsilon,
+            growth_size_epsilon = growth_size_epsilon,
+            scaling_relationship = scaling_relationship,
+            slip_along_rupture_model = 'UNIFORM',
             )
-
 
         job_arguments = dict(
             task_id = task_count,
@@ -84,7 +87,6 @@ def build_tasks(general_task_id, models, min_sub_sects_per_parents, min_sub_sect
             root_folder=OPENSHA_ROOT,
             general_task_id=general_task_id,
             use_api = USE_API,
-            short_name=f'{model}-{thinning_factor}',
             )
 
         #write a config
@@ -108,8 +110,8 @@ if __name__ == "__main__":
 
     t0 = dt.datetime.utcnow()
 
-    #USE_API = False
     GENERAL_TASK_ID = None
+    #USE_API = False
 
     if USE_API:
         headers={"x-api-key":API_KEY}
@@ -125,23 +127,21 @@ if __name__ == "__main__":
         print("GENERAL_TASK_ID:", GENERAL_TASK_ID)
 
     ##Test parameters
-    models = ["CFM_0_9_SANSTVZ_2010",] #, "CFM_0_9_ALL_D90","CFM_0_9_SANSTVZ_2010"]
-    jump_limits = [15,] #default is 15
-    adaptive_min_distances = [6,] #9] default is 6
-    thinning_factors = [0.0,0.1,0.2] #5, 0.1, 0.2, 0.3] #, 0.05, 0.1, 0.2]
-    min_sub_sects_per_parents = [2,] #3,4,5]
-    min_sub_sections_list = [2,3,4,5]
-
-    #limit test size, nomally 1000 for NZ CFM
-    MAX_SECTIONS = 2000
+    models = ["SBD_0_1_HKR_KRM_30", ] #"SBD_0_1_HKR_KRM_10"]
+    min_aspect_ratios = [2.0,]
+    max_aspect_ratios = [5.0,]
+    aspect_depth_thresholds = [5,]
+    min_fill_ratios = [0.2, 0.1]
+    growth_position_epsilons = [0.0 ,] #0.02, 0.01]
+    growth_size_epsilons = [0.01, 0.005, 0.0 ] #0.02, 0.01]
+    scaling_relationships = ["TMG_SUB_2017"]
 
     pool = Pool(WORKER_POOL_SIZE)
 
     scripts = []
     for script_file in build_tasks(GENERAL_TASK_ID,
-        models, min_sub_sects_per_parents, min_sub_sections_list,
-        jump_limits, adaptive_min_distances,
-        thinning_factors,  MAX_SECTIONS):
+        models, min_aspect_ratios, max_aspect_ratios, aspect_depth_thresholds, min_fill_ratios,
+        growth_position_epsilons, growth_size_epsilons, scaling_relationships):
         scripts.append(script_file)
 
     def call_script(script_name):

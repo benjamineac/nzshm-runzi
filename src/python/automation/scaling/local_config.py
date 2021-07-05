@@ -11,7 +11,7 @@ API_URL  = os.getenv('NZSHM22_TOSHI_API_URL', "http://127.0.0.1:5000/graphql")
 API_KEY = os.getenv('NZSHM22_TOSHI_API_KEY', "")
 S3_URL = os.getenv('NZSHM22_TOSHI_S3_URL',"http://localhost:4569")
 
-USE_API = os.getenv('NZSHM22_TOSHI_API_ENABLED' , False)
+USE_API = os.getenv('NZSHM22_TOSHI_API_ENABLED' , False) == "1"
 
 #How many threads to give each worker, setting this higher than # of virtual cores is pointless.
 JAVA_THREADS = os.getenv('NZSHM22_SCRIPT_JAVA_THREADS', 4) #each

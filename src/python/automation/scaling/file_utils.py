@@ -5,50 +5,62 @@ helpers for upstream file retrieval
 """
 import os
 import requests
-from pathlib import PurePath, Path
-
+from pathlib import Path, PurePath
 
 def get_output_file_ids(general_task_api, upstream_task_id, file_extension='zip'):
 
     api_result = general_task_api.get_subtask_files(upstream_task_id)
     for subtask in api_result['children']['edges']:
 
-        upstream_meta = None
+        #get rupture set fault model
+        fault_model = ""
         for filenode in subtask['node']['child']['files']['edges']:
-            #skip task inputs
-            if filenode['node']['role'] == 'READ':
-                ruptset_meta = dict() ## this relies on order of
-                for kv in filenode['node']['file']['meta']:
-                    ruptset_meta[kv['k']] = kv['v']
-            else:
-                continue
+            print("FN:", filenode)
+            if filenode['node']['role'] == 'READ' and filenode['node']['file']['file_name'][-3:] == file_extension:
+                for kv in filenode['node']['file'].get('meta', []):
+                    if kv.get('k') == 'fault_model':
+                        fault_model = kv.get('v')
+                        break
 
         for filenode in subtask['node']['child']['files']['edges']:
             #skip task inputs
             if filenode['node']['role'] == 'READ':
                 continue
-
             if filenode['node']['file']['file_name'][-3:] == file_extension:
-                inversion_meta = dict() ## this relies on order of
-                for kv in filenode['node']['file']['meta']:
-                    inversion_meta[kv['k']] = kv['v']
-
-                short_name = ""
-                max_inversion_time = ""
-
-                # for kv in filenode['node']['file'].get('meta', []):
-                #     if kv.get('k') == 'short_name':
-                #         short_name = kv.get('v')
-                #     if kv.get('k') == 'max_inversion_time':
-                #         max_inversion_time = kv.get('v')
-
-                solution = dict(id = filenode['node']['file']['id'],
+                # inversion_meta = dict() ## this relies on order of
+                # for kv in filenode['node']['file']['meta']:
+                #     inversion_meta[kv['k']] = kv['v']
+                res = dict(id = filenode['node']['file']['id'],
                         file_name = filenode['node']['file']['file_name'],
-                        file_size = filenode['node']['file']['file_size'],)
+                        file_size = filenode['node']['file']['file_size']
+                        )
 
-                yield {**ruptset_meta, **inversion_meta, **solution,
-                        'generation_task_id': subtask['node']['child']['id']}
+                if fault_model:
+                    res['fault_model'] = fault_model
+                yield res
+                #TESTING
+                #return
 
+def get_output_file_id(file_api, single_file_id):
+
+    api_result = file_api.get_file_detail(single_file_id)
+    fault_model = ""
+
+    print("FN:", api_result)
+    if api_result['file_name'][-3:] == "zip":
+        res = dict(id = api_result['id'],
+                file_name = api_result['file_name'],
+                file_size = api_result['file_size']
+                )
+        for kv in api_result['meta']:
+            if kv.get('k') == 'fault_model':
+                fault_model = kv.get('v')
+
+        if fault_model:
+            res['fault_model'] = fault_model
+        yield res #yep yield one
+
+    return
 
 
 def get_download_info(file_api, file_infos):
@@ -60,17 +72,24 @@ def get_download_info(file_api, file_infos):
     """
     file_info = {}
     for itm in file_infos:
-        api_result = file_api.get_download_url(itm['id'])
-        print(api_result)
+        api_result = file_api.get_file_download_url(itm['id'])
+        # print(api_result)
         yield dict(dict(file_url=api_result['file_url']), **itm) #merge the discts
 
-def download_files(general_api, file_api, upstream_task_id, dest_folder, id_suffix=False, overwrite=False):
 
+def download_files(file_api, file_generator, dest_folder, id_suffix=False, overwrite=False):
+    """
+    file_generator = get_output_file_ids(general_api, upstream_task_id) # for files by upstream task ID)
+
+    or
+
+    file_generator = get_output_file_id(file_api, file_id) #for file by file ID
+    """
     downloads = dict()
 
-    for info in get_download_info(file_api, get_output_file_ids(general_api, upstream_task_id)):
+    for info in get_download_info(file_api, file_generator):
 
-        folder = Path(dest_folder, info['generation_task_id'])
+        folder = Path(dest_folder, 'downloads', info['id'])
         folder.mkdir(parents=True, exist_ok=True)
 
         #we can skip if file exists and has correct file_size
@@ -84,16 +103,12 @@ def download_files(general_api, file_api, upstream_task_id, dest_folder, id_suff
         downloads[info['id']] = dict(id=info['id'], filepath = str(file_path), info = info)
 
         if os.path.isfile(file_path):
-            #if os.path.getsize(file_path) == info['file_size']:
-            #file exists and has correct size
             if not overwrite:
                 continue
 
         # here we pull the file
-        # validate the file size
-        print(info['file_url'])
+        # print(info['file_url'])
         # r0 = requests.head(info['file_url'])
-
         r1 = requests.get(info['file_url'])
         with open(str(file_path), 'wb') as f:
             f.write(r1.content)

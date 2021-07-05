@@ -9,46 +9,54 @@ from multiprocessing.dummy import Pool
 import datetime as dt
 from dateutil.tz import tzutc
 
-
-from scaling.opensha_task_factory import OpenshaTaskFactory
-from scaling.file_utils import download_files, get_output_file_ids
-
-from nshm_toshi_client.general_task import GeneralTask
+# from nshm_toshi_client.general_task import GeneralTask
 from nshm_toshi_client.toshi_file import ToshiFile
 from scaling.toshi_api import ToshiApi
 
-import scaling.inversion_diags_report_task
-# from scaling.toshi_api import ToshiApi
+from scaling.opensha_task_factory import OpenshaTaskFactory
+from scaling.file_utils import download_files
+
+import scaling.ruptset_diags_report_task
+
 
 # Set up your local config, from environment variables, with some sone defaults
 from scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
     JVM_HEAP_MAX, JVM_HEAP_START, USE_API, JAVA_THREADS,
     API_KEY, API_URL, S3_URL, CLUSTER_MODE)
 
+# If you wish to override something in the main config, do so here ..
+# WORKER_POOL_SIZE = 3
+WORKER_POOL_SIZE = 2
+JVM_HEAP_MAX = 12
+JAVA_THREADS = 6
+USE_API = True #to read the ruptset form the API
 
-def run_tasks(general_task_id, solutions):
+
+#If using API give this task a descriptive setting...
+TASK_TITLE = "Baseline Inversion - Coulomb"
+TASK_DESCRIPTION = """
+- Coulomb rupture sets
+- Fixed duration comparisons
+"""
+
+def run_tasks(general_task_id, rupture_sets):
     task_count = 0
-    task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, scaling.inversion_diags_report_task,
+    task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, scaling.ruptset_diags_report_task,
         jre_path=OPENSHA_JRE, app_jar_path=FATJAR,
         task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START,
         pbs_script=CLUSTER_MODE)
 
-    for (sid, rupture_set_info) in solutions.items():
+    for (rid, rupture_set_info) in rupture_sets.items():
 
         task_count +=1
 
-        #get FM name
-        fault_model = rupture_set_info['info']['fault_model']
+        short_name = f"Rupture set file_id: {rid}"
 
-        # idx0 = rupture_set_info['filepath'].index("-CFM")
-        # idx1 = rupture_set_info['filepath'].index("-", idx0 +1)
-        #rupture_set_info['info'] has detail of the Inversion task
+        #rupture_set_info['info'] has detaail of the Inversion task
         task_arguments = dict(
-            file_id = str(rupture_set_info['id']),
-            file_path = rupture_set_info['filepath'],
-            fault_model = fault_model,
+            rupture_set_file_id = str(rupture_set_info['id']),
+            rupture_set_file_path = rupture_set_info['filepath'],
             )
-        print(task_arguments)
 
         job_arguments = dict(
             task_id = task_count,
@@ -76,43 +84,37 @@ def run_tasks(general_task_id, solutions):
 
         yield str(script_file_path)
 
-
 if __name__ == "__main__":
 
     t0 = dt.datetime.utcnow()
 
     GENERAL_TASK_ID = None
-    # If you wish to override something in the main config, do so here ..
-    WORKER_POOL_SIZE = 2
-    JVM_HEAP_MAX = 10
-    JAVA_THREADS = 6
-    USE_API = True #to read the ruptset form the API
-
-
-    #If using API give this task a descriptive setting...
-    TASK_TITLE = "Inversion diags"
-    TASK_DESCRIPTION = """
-    """
 
     if USE_API:
         headers={"x-api-key":API_KEY}
-        file_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
-        general_api = GeneralTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
+        #general_api = GeneralTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
+        general_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
+        file_api = ToshiFile(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
 
         #get input files from API
-        inversion_task_id = "R2VuZXJhbFRhc2s6NjgzVkR4emY="
-
-        file_generator = get_output_file_ids(general_api, inversion_task_id) #
-        solutions = download_files(file_api, file_generator, str(WORK_PATH), overwrite=True)
+        upstream_task_id = "R2VuZXJhbFRhc2s6MTg3OEtweFI=" #PROD Azimuthal Stirling
+        upstream_task_id = "R2VuZXJhbFRhc2s6MjE3Qk1YREw=" #Azim, 3,4,5
+        upstream_task_id = "R2VuZXJhbFRhc2s6MjMwWUc4TE4=" #Coul, 3,4,5
+        upstream_task_id = "R2VuZXJhbFRhc2s6MTkyS3d1ZTY=" #Coulomb Stirling
+        upstream_task_id = "R2VuZXJhbFRhc2s6Mjk2MmlTNEs=" #Azimuthan minSS 3,4,5
+        upstream_task_id = "R2VuZXJhbFRhc2s6Mjk1WWlSaUo=" #Coulomb minSS 3,4,5
+        upstream_task_id = "R2VuZXJhbFRhc2s6NDAzOTNpVmI=" ##Coulomb Stirling minSS 3,4,5
+        upstream_task_id = "R2VuZXJhbFRhc2s6NjE1aHdiNFM=" ##subduction
+        rupture_sets = download_files(general_api, file_api, upstream_task_id, str(WORK_PATH), id_suffix=False, overwrite=False)
 
         print("GENERAL_TASK_ID:", GENERAL_TASK_ID)
 
-    print('SOLUTIONS', solutions)
+    print( rupture_sets )
 
     pool = Pool(WORKER_POOL_SIZE)
 
     scripts = []
-    for script_file in run_tasks(GENERAL_TASK_ID, solutions):
+    for script_file in run_tasks(GENERAL_TASK_ID, rupture_sets):
         print('scheduling: ', script_file)
         scripts.append(script_file)
 
