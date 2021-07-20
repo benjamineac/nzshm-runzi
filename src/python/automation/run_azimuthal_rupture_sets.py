@@ -100,6 +100,7 @@ def build_tasks(general_task_id, models, jump_limits, ddw_ratios, strategies,
         os.chmod(script_file_path, st.st_mode | stat.S_IEXEC)
 
         yield str(script_file_path)
+        return
 
 if __name__ == "__main__":
 
@@ -130,7 +131,7 @@ if __name__ == "__main__":
     scaling_relations = ['TMG_CRU_2017',] #'SHAW_2009_MOD'] WARNING this is not yet configurable, need a setter in ruptset builder
 
     #limit test size, nomally 1000 for NZ CFM
-    MAX_SECTIONS = 2000
+    MAX_SECTIONS = 200
 
     pool = Pool(WORKER_POOL_SIZE)
 
@@ -156,4 +157,5 @@ if __name__ == "__main__":
     pool.close()
     pool.join()
 
+    print("GENERAL_TASK_ID:", GENERAL_TASK_ID)
     print("Done! in %s secs" % (dt.datetime.utcnow() - t0).total_seconds())

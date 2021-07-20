@@ -26,10 +26,11 @@ from scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
 
 def build_crustal_tasks(general_task_id, rupture_sets, rounds, completion_energies, max_inversion_times,
         mfd_equality_weights, mfd_inequality_weights, slip_rate_weighting_types,
-        slip_rate_weights, slip_uncertainty_scaling_factors, slip_rate_normalized_weights, slip_rate_unnormalized_weights):
+        slip_rate_weights, slip_uncertainty_scaling_factors, slip_rate_normalized_weights, slip_rate_unnormalized_weights,
+        seismogenic_min_mags):
     task_count = 0
     task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, scaling.inversion_solution_builder_task,
-        initial_gateway_port=25933,
+        initial_gateway_port=INITIAL_GATEWAY_PORT,
         jre_path=OPENSHA_JRE, app_jar_path=FATJAR,
         task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START,
         pbs_ppn=JAVA_THREADS,
@@ -39,12 +40,14 @@ def build_crustal_tasks(general_task_id, rupture_sets, rounds, completion_energi
         for (round, completion_energy, max_inversion_time,
                 mfd_equality_weight, mfd_inequality_weight, slip_rate_weighting_type,
                 slip_rate_weight, slip_uncertainty_scaling_factor,
-                slip_rate_normalized_weight, slip_rate_unnormalized_weight)\
+                slip_rate_normalized_weight, slip_rate_unnormalized_weight,
+                seismogenic_min_mag)\
             in itertools.product(
                 rounds, completion_energies, max_inversion_times,
                 mfd_equality_weights, mfd_inequality_weights, slip_rate_weighting_types,
                 slip_rate_weights, slip_uncertainty_scaling_factors,
-                slip_rate_normalized_weights, slip_rate_unnormalized_weights):
+                slip_rate_normalized_weights, slip_rate_unnormalized_weights,
+                seismogenic_min_mags):
 
             task_count +=1
 
@@ -62,6 +65,7 @@ def build_crustal_tasks(general_task_id, rupture_sets, rounds, completion_energi
                 slip_uncertainty_scaling_factor=slip_uncertainty_scaling_factor,
                 slip_rate_normalized_weight=slip_rate_normalized_weight,
                 slip_rate_unnormalized_weight=slip_rate_unnormalized_weight,
+                seismogenic_min_mag=seismogenic_min_mag
                 )
 
             job_arguments = dict(
@@ -101,21 +105,24 @@ if __name__ == "__main__":
     WORKER_POOL_SIZE = 1
     JVM_HEAP_MAX = 30
     JAVA_THREADS = 4
-    USE_API = False
+    #USE_API = False
+
+    INITIAL_GATEWAY_PORT = 26933 #set this to ensure that concurrent scheduled tasks won't clash
 
     #If using API give this task a descriptive setting...
-    TASK_TITLE = "Inversions on TVZ/SansTVZ MFDs, Coulomb D90, MFD vs U3 NORMALIZED "
+    TASK_TITLE = "Inversions: Coulomb D90 with new minimum magnitudes "
     TASK_DESCRIPTION = """
-    MFD vs slip rate experiment using UCERF3 SR NORMALIZED constraints. 24 permutations, 1 round.
 
-     - completion_energies = [0.0,] (disabled)
-     - max_inversion_times = [8*60,]   #units are minutes
-     - mfd_equality_weights = [1e2, 1e3]
+    IN U3 then min_mag on seismogenic ruptures was 6.0, but here we test higher values (6.8. 7.0).
+
+     - completion_energies = [0.0,]
+     - max_inversion_times = [8*60,]
+     - mfd_equality_weights = [1e2, 1e3, 1e4]
      - mfd_inequality_weights = [1e2, 1e3, 1e4]
-
-     - slip_rate_weighting_types = ['NORMALIZED_BY_SLIP_RATE',]
-     - slip_rate_normalized_weights = [1, 10, 1e2, 1e4] #1, 10]
-     - slip_rate_unnormalized_weights = [0,] # 1e2, 1e3, 1e4]
+     - slip_rate_weighting_types = ['BOTH',]
+     - slip_rate_normalized_weights = [1e2, 1e3, 1e4]
+     - slip_rate_unnormalized_weights = [1e2, 1e3, 1e4]
+     - seismogenic_min_mags  = [6.8, 7.0]
     """
     GENERAL_TASK_ID = None
 
@@ -130,7 +137,9 @@ if __name__ == "__main__":
     #upstream_task_id = "R2VuZXJhbFRhc2s6MjUzQjdjOU4=" #TEST API
 
 
-    file_id = "RmlsZTozMDMuMEJCOVVY"
+    file_id = "RmlsZTozMDMuMEJCOVVY" #PROD D90 Coulomb
+    file_id = "RmlsZTo4NTkuMDM2Z2Rw" #PROD 2010_Coulomb
+    #file_id = "RmlsZTo2LjB2NHVOVA==" # DEV LOCAL
     file_id = "RmlsZToxMzY1LjBzZzRDeA==" #TEST (Subduction)
 
     """
@@ -142,7 +151,7 @@ if __name__ == "__main__":
     #for a single rupture set, pass a valid FileID
     file_generator = get_output_file_id(file_api, file_id) #for file by file ID
 
-    rupture_sets = download_files(file_api, file_generator, str(WORK_PATH), overwrite=True)
+    rupture_sets = download_files(file_api, file_generator, str(WORK_PATH), overwrite=False)
 
     if USE_API:
         #create new task in toshi_api
@@ -160,18 +169,21 @@ if __name__ == "__main__":
     max_inversion_times = [1, ] #8*60,] #3*60,]  #units are minutes
     #max_inversion_times.reverse()
 
-    mfd_equality_weights = [1e2, 1e3]
+    seismogenic_min_mags  = [6.8, 7.0]
+
+    mfd_equality_weights = [1e2, 1e3, 1e4]
     mfd_inequality_weights = [1e2, 1e3, 1e4]
 
-    slip_rate_weighting_types = ['NORMALIZED_BY_SLIP_RATE',] #UNCERTAINTY_ADJUSTED',]
+    slip_rate_weighting_types = ['BOTH'] #NORMALIZED_BY_SLIP_RATE', UNCERTAINTY_ADJUSTED',]
 
-    #thse are used for UNCERTAINTY_ADJUSTED
+    #these are used for UNCERTAINTY_ADJUSTED
     slip_rate_weights = [None, ] # 1e5, 1e4, 1e3, 1e2]
     slip_uncertainty_scaling_factors = [None, ] #2,]
 
     #these are used for BOTH, NORMALIZED and UNNORMALIZED
-    slip_rate_normalized_weights = [1, 10, 1e2, 1e4] #1, 10]
-    slip_rate_unnormalized_weights = [0,] # 1e2, 1e3, 1e4]
+    slip_rate_normalized_weights = [1e2, 1e3, 1e4]
+    slip_rate_unnormalized_weights = [1e2, 1e3, 1e4]
+
 
     pool = Pool(WORKER_POOL_SIZE)
 
@@ -180,7 +192,8 @@ if __name__ == "__main__":
         rupture_sets, rounds, completion_energies, max_inversion_times,
         mfd_equality_weights, mfd_inequality_weights, slip_rate_weighting_types,
         slip_rate_weights, slip_uncertainty_scaling_factors,
-        slip_rate_normalized_weights, slip_rate_unnormalized_weights
+        slip_rate_normalized_weights, slip_rate_unnormalized_weights,
+        seismogenic_min_mags
         ):
         # print('scheduling: ', script_file)
         scripts.append(script_file)
