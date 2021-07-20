@@ -174,9 +174,10 @@ if __name__ == "__main__":
     headers={"x-api-key":API_KEY}
     general_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
 
-    GID = "R2VuZXJhbFRhc2s6NjgzVkR4emY="
 
-    UPLOAD_FOLDER = "DATA12"
+    GID = "R2VuZXJhbFRhc2s6MTM5MGllNXp4"
+
+    UPLOAD_FOLDER = "DATA19"
 
     TUI = "http://simple-toshi-ui.s3-website-ap-southeast-2.amazonaws.com/"
     WORK_FOLDER = "/home/chrisbc/DEV/GNS/opensha-new/AWS_S3_DATA"
@@ -185,8 +186,10 @@ if __name__ == "__main__":
     # print(gentask)
     node = gentask
 
-    info_keys = ['mfd_equality_weight', 'mfd_inequality_weight','slip_rate_unnormalized_weight' ] # 'round', 'max_inversion_time'
-    #info_keys = ['min_fill_ratio', 'growth_size_epsilon'] # for ruptget on subduction
+
+    info_keys = ['mfd_transition_mag', 'mfd_equality_weight', 'mfd_inequality_weight','slip_rate_normalized_weight'] #, 'slip_rate_unnormalized_weight' ] # 'round', 'max_inversion_time'
+    #info_keys = ['fault_model', 'min_fill_ratio',] #'growth_size_epsilon'] # for ruptget on subduction
+    #info_keys = ['round',]
 
     #Write Section info
     print(gt_template(node))

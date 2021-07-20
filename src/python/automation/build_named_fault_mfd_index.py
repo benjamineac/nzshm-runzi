@@ -42,18 +42,21 @@ class NamedFaultIndexBuilder():
                 for filename in fnmatch.filter(files, pattern):
                     folder_path = PurePath(root)
                     if len(folder_path.parts) - len(PurePath(self._dir_name).parts) == 1:
-                        #print(root, filename)
+                        print(root, filename)
                         key = PurePath(root).parts[-1]
                         #print(key)
                         value = json.load(open(PurePath(folder_path, filename), 'r'))
-                        #print(value['task_arguments'])
+                        print(value['task_arguments'])
                         '''
                         e.g {'rupture_set_file_id': 'RmlsZTo0ODMuMFN3cTRN', 'generation_task_id': 'UnVwdHVyZUdlbmVyYXRpb25UYXNrOjE4M0FoblN5',
                         'solution_file': '/home/chrisbc/DEV/GNS/opensha-new/nshm-nz-opensha/src/python/automation/tmp/UnVwdHVyZUdlbmVyYXRpb25UYXNrOjE4M0FoblN5/InversionSolution-RmlsZTo2-rnd0-t1380_RmlsZTo0ODMuMFN3cTRN.zip',
                         'short_name': 'CFM_0_9_SANSTVZ_D90-0.1', 'rupture_class': 'Azimuth', 'max_inversion_time': '1380', 'completion_energy': '0.05', 'round_number': '0'}
                         '''
+                        try:
+                            solution_name = PurePath( value['task_arguments']['file_path']).name
+                        except (KeyError):
+                            break
 
-                        solution_name = PurePath( value['task_arguments']['file_path']).name
                         #print(solution_name)
                         solution_filepath = Path(folder_path, '..', value['task_arguments']['file_id'], solution_name).resolve()
                         #print(solution_filepath)
@@ -192,7 +195,7 @@ class NamedFaultIndexBuilder():
         return links
 
 def main():
-    #NamedFaultIndexBuilder
+
     meta_builder = NamedFaultIndexBuilder(path = WORK_PATH)
 
     solution_infos = meta_builder.build()

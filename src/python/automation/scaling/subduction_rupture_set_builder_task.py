@@ -99,6 +99,9 @@ class RuptureSetBuilderTask():
             .setSlipAlongRuptureModel(ta['slip_along_rupture_model'])\
             .setFaultModel(ta['fault_model'])
 
+        if ta['deformation_model']:
+            self._builder.setDeformationModel(ta['deformation_model'])
+
         #name the output file
         outputfile = self._output_folder.joinpath(self._builder.getDescriptiveName()+ ".zip")
         print("building %s started at %s" % (outputfile, dt.datetime.utcnow().isoformat()), end=' ')

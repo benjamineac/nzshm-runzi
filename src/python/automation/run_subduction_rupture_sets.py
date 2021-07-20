@@ -27,25 +27,8 @@ from scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
 WORKER_POOL_SIZE = 2
 
 
-#If using API give this task a descriptive setting...
-TASK_TITLE = "Build Hikurangi/Kermadec ruptsets 30km"
-
-TASK_DESCRIPTION = """
-
- - models = [SBD_0_1_HKR_KRM_30]
- - min_aspect_ratio = 2.0
- - max_aspect_ratio = 5.0
- - aspect_depth_threshold = 5
- - min_fill_ratios = [0.2, 0.1,]
- - growth_position_epsilons = [0.0]
- - growth_size_epsilons = [0.01, 0.005, 0.0]
- - scaling_relationships = ['TMG_SUB_2017']
-
-"""
-
-
 def build_tasks(general_task_id, mmodels, min_aspect_ratios, max_aspect_ratios, aspect_depth_thresholds, min_fill_ratios,
-            growth_position_epsilons, growth_size_epsilons, scaling_relationships):
+            growth_position_epsilons, growth_size_epsilons, scaling_relationships, deformation_models):
     """
     build the shell scripts 1 per task, based on all the inputs
 
@@ -59,9 +42,9 @@ def build_tasks(general_task_id, mmodels, min_aspect_ratios, max_aspect_ratios, 
         pbs_script=CLUSTER_MODE)
 
     for (model, min_aspect_ratio, max_aspect_ratio, aspect_depth_threshold,
-            min_fill_ratio, growth_position_epsilon, growth_size_epsilon, scaling_relationship) in itertools.product(
+            min_fill_ratio, growth_position_epsilon, growth_size_epsilon, scaling_relationship, deformation_model) in itertools.product(
             models, min_aspect_ratios, max_aspect_ratios, aspect_depth_thresholds, min_fill_ratios,
-            growth_position_epsilons, growth_size_epsilons, scaling_relationships):
+            growth_position_epsilons, growth_size_epsilons, scaling_relationships, deformation_models):
 
         task_count +=1
 
@@ -75,6 +58,7 @@ def build_tasks(general_task_id, mmodels, min_aspect_ratios, max_aspect_ratios, 
             growth_size_epsilon = growth_size_epsilon,
             scaling_relationship = scaling_relationship,
             slip_along_rupture_model = 'UNIFORM',
+            deformation_model = deformation_model
             )
 
         job_arguments = dict(
@@ -113,6 +97,23 @@ if __name__ == "__main__":
     GENERAL_TASK_ID = None
     #USE_API = False
 
+    #If using API give this task a descriptive setting...
+    TASK_TITLE = "Build Hikurangi/Kermadec & Hikurangi/Louisville ruptsets with constant 10mm slip rate"
+
+    TASK_DESCRIPTION = """
+     - models = [SBD_0_1_HKR_KRM_30, SBD_0_1_HKR_LR_30]
+     - min_aspect_ratio = 2.0
+     - max_aspect_ratio = 5.0
+     - aspect_depth_threshold = 5
+     - min_fill_ratios = [0.2, 0.1,]
+     - growth_position_epsilons = [0.0]
+     - growth_size_epsilons = [0.0]
+     - scaling_relationships = [TMG_SUB_2017]
+     - deformation_models = [GLOBAL_SLIP_RATE_10MM]
+
+    """
+
+
     if USE_API:
         headers={"x-api-key":API_KEY}
         general_api = GeneralTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
@@ -127,21 +128,22 @@ if __name__ == "__main__":
         print("GENERAL_TASK_ID:", GENERAL_TASK_ID)
 
     ##Test parameters
-    models = ["SBD_0_1_HKR_KRM_30", ] #"SBD_0_1_HKR_KRM_10"]
+    models = ["SBD_0_1_HKR_KRM_30", "SBD_0_1_HKR_LR_30"] #"SBD_0_1_HKR_KRM_10"]
     min_aspect_ratios = [2.0,]
     max_aspect_ratios = [5.0,]
     aspect_depth_thresholds = [5,]
     min_fill_ratios = [0.2, 0.1]
-    growth_position_epsilons = [0.0 ,] #0.02, 0.01]
-    growth_size_epsilons = [0.01, 0.005, 0.0 ] #0.02, 0.01]
+    growth_position_epsilons = [0.0,] #0.02, 0.01]
+    growth_size_epsilons = [0.0, ] #0.02, 0.01]
     scaling_relationships = ["TMG_SUB_2017"]
+    deformation_models = ['GLOBAL_SLIP_RATE_10MM']
 
     pool = Pool(WORKER_POOL_SIZE)
 
     scripts = []
     for script_file in build_tasks(GENERAL_TASK_ID,
         models, min_aspect_ratios, max_aspect_ratios, aspect_depth_thresholds, min_fill_ratios,
-        growth_position_epsilons, growth_size_epsilons, scaling_relationships):
+        growth_position_epsilons, growth_size_epsilons, scaling_relationships, deformation_models):
         scripts.append(script_file)
 
     def call_script(script_name):

@@ -9,13 +9,20 @@ from multiprocessing.dummy import Pool
 import datetime as dt
 from dateutil.tz import tzutc
 
+# from scaling.opensha_task_factory import OpenshaTaskFactory
+# from scaling.file_utils import download_files, get_output_file_ids
+
+# from nshm_toshi_client.general_task import GeneralTask
+# from nshm_toshi_client.toshi_file import ToshiFile
+# from scaling.toshi_api import ToshiApi
+
+#from nshm_toshi_client.general_task import GeneralTask
+#from nshm_toshi_client.toshi_file import ToshiFile
+from scaling.toshi_api import ToshiApi
 
 from scaling.opensha_task_factory import OpenshaTaskFactory
 from scaling.file_utils import download_files, get_output_file_ids
 
-from nshm_toshi_client.general_task import GeneralTask
-from nshm_toshi_client.toshi_file import ToshiFile
-from scaling.toshi_api import ToshiApi
 
 import scaling.inversion_diags_report_task
 # from scaling.toshi_api import ToshiApi
@@ -83,38 +90,16 @@ if __name__ == "__main__":
 
     GENERAL_TASK_ID = None
     # If you wish to override something in the main config, do so here ..
-    WORKER_POOL_SIZE = 2
-    JVM_HEAP_MAX = 10
-    JAVA_THREADS = 6
-    USE_API = True #to read the ruptset form the API
+    WORKER_POOL_SIZE = 3
+    JVM_HEAP_MAX = 12
+    JAVA_THREADS = 4
+    # USE_API = True #to read the ruptset form the API
 
 
     #If using API give this task a descriptive setting...
     TASK_TITLE = "Inversion diags"
     TASK_DESCRIPTION = """
     """
-
-    if USE_API:
-        headers={"x-api-key":API_KEY}
-        file_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
-        general_api = GeneralTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
-
-        #get input files from API
-        inversion_task_id = "R2VuZXJhbFRhc2s6NjgzVkR4emY="
-
-        file_generator = get_output_file_ids(general_api, inversion_task_id) #
-        solutions = download_files(file_api, file_generator, str(WORK_PATH), overwrite=True)
-
-        print("GENERAL_TASK_ID:", GENERAL_TASK_ID)
-
-    print('SOLUTIONS', solutions)
-
-    pool = Pool(WORKER_POOL_SIZE)
-
-    scripts = []
-    for script_file in run_tasks(GENERAL_TASK_ID, solutions):
-        print('scheduling: ', script_file)
-        scripts.append(script_file)
 
     def call_script(script_name):
         print("call_script with:", script_name)
@@ -123,10 +108,30 @@ if __name__ == "__main__":
         else:
             check_call(['bash', script_name])
 
-    print('task count: ', len(scripts))
+    headers={"x-api-key":API_KEY}
+    file_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
+    #general_api = GeneralTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
+
+
+    pool = Pool(WORKER_POOL_SIZE)
+    for inversion_task_id in ["R2VuZXJhbFRhc2s6MTMzNXB1NlVi"]: #, "R2VuZXJhbFRhc2s6MTM5MGllNXp4"
+        #get input files from API
+        file_generator = get_output_file_ids(file_api, inversion_task_id) #
+        solutions = download_files(file_api, file_generator, str(WORK_PATH), overwrite=False)
+
+        print("GENERAL_TASK_ID:", GENERAL_TASK_ID)
+
+        #print('SOLUTIONS', solutions)
+        scripts = []
+        for script_file in run_tasks(GENERAL_TASK_ID, solutions):
+            print('scheduling: ', script_file)
+            scripts.append(script_file)
+
+        print('task count: ', len(scripts))
+        pool.map(call_script, scripts)
+
     print('worker count: ', WORKER_POOL_SIZE)
 
-    pool.map(call_script, scripts)
     pool.close()
     pool.join()
 

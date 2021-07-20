@@ -9,12 +9,12 @@ from multiprocessing.dummy import Pool
 import datetime as dt
 from dateutil.tz import tzutc
 
-# from nshm_toshi_client.general_task import GeneralTask
+from nshm_toshi_client.general_task import GeneralTask
 from nshm_toshi_client.toshi_file import ToshiFile
 from scaling.toshi_api import ToshiApi
 
 from scaling.opensha_task_factory import OpenshaTaskFactory
-from scaling.file_utils import download_files
+from scaling.file_utils import download_files, get_output_file_id, get_output_file_ids
 
 import scaling.ruptset_diags_report_task
 
@@ -92,24 +92,32 @@ if __name__ == "__main__":
 
     if USE_API:
         headers={"x-api-key":API_KEY}
-        #general_api = GeneralTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
-        general_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
-        file_api = ToshiFile(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
+
+        general_api = GeneralTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
+        file_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
 
         #get input files from API
-        upstream_task_id = "R2VuZXJhbFRhc2s6MTg3OEtweFI=" #PROD Azimuthal Stirling
-        upstream_task_id = "R2VuZXJhbFRhc2s6MjE3Qk1YREw=" #Azim, 3,4,5
-        upstream_task_id = "R2VuZXJhbFRhc2s6MjMwWUc4TE4=" #Coul, 3,4,5
-        upstream_task_id = "R2VuZXJhbFRhc2s6MTkyS3d1ZTY=" #Coulomb Stirling
-        upstream_task_id = "R2VuZXJhbFRhc2s6Mjk2MmlTNEs=" #Azimuthan minSS 3,4,5
-        upstream_task_id = "R2VuZXJhbFRhc2s6Mjk1WWlSaUo=" #Coulomb minSS 3,4,5
         upstream_task_id = "R2VuZXJhbFRhc2s6NDAzOTNpVmI=" ##Coulomb Stirling minSS 3,4,5
         upstream_task_id = "R2VuZXJhbFRhc2s6NjE1aHdiNFM=" ##subduction
-        rupture_sets = download_files(general_api, file_api, upstream_task_id, str(WORK_PATH), id_suffix=False, overwrite=False)
+        upstream_task_id = "R2VuZXJhbFRhc2s6OTg1MzR5dnQ=" ##subduction shortened
+        upstream_task_id = "R2VuZXJhbFRhc2s6MTMzMGFSU2Jx"
 
-        print("GENERAL_TASK_ID:", GENERAL_TASK_ID)
 
-    print( rupture_sets )
+        """
+        CHOOSE ONE OF:
+
+         - file_generator = get_output_file_id(file_api, file_id)
+         - file_generator = get_output_file_ids(general_api, upstream_task_id)
+        """
+        #for a single rupture set, pass a valid FileID
+        #file_generator = get_output_file_id(file_api, file_id) #for file by file ID
+        file_generator = get_output_file_ids(general_api, upstream_task_id)
+
+        rupture_sets = download_files(file_api, file_generator, str(WORK_PATH), overwrite=False)
+
+        # print("GENERAL_TASK_ID:", GENERAL_TASK_ID)
+
+    # print( rupture_sets )
 
     pool = Pool(WORKER_POOL_SIZE)
 
