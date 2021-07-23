@@ -24,7 +24,9 @@ from scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
     API_KEY, API_URL, S3_URL, CLUSTER_MODE)
 
 # If you wish to override something in the main config, do so here ..
-WORKER_POOL_SIZE = 2
+WORKER_POOL_SIZE = 1
+JVM_HEAP_MAX = 56
+JVM_HEAP_START = 16
 
 
 def build_tasks(general_task_id, mmodels, min_aspect_ratios, max_aspect_ratios, aspect_depth_thresholds, min_fill_ratios,
@@ -128,13 +130,14 @@ if __name__ == "__main__":
         print("GENERAL_TASK_ID:", GENERAL_TASK_ID)
 
     ##Test parameters
-    models = ["SBD_0_1_HKR_KRM_30", "SBD_0_1_HKR_LR_30"] #"SBD_0_1_HKR_KRM_10"]
+    models = ["SBD_0_1_HKR_LR_10_FEC", ] #"SBD_0_1_HKR_KRM_10"]
+
     min_aspect_ratios = [2.0,]
     max_aspect_ratios = [5.0,]
     aspect_depth_thresholds = [5,]
-    min_fill_ratios = [0.2, 0.1]
-    growth_position_epsilons = [0.0,] #0.02, 0.01]
-    growth_size_epsilons = [0.0, ] #0.02, 0.01]
+    min_fill_ratios = [0.1]
+    growth_position_epsilons = [0.0] #0.02, 0.01]
+    growth_size_epsilons =  [0.0] #0.02, 0.01]
     scaling_relationships = ["TMG_SUB_2017"]
     deformation_models = ['GLOBAL_SLIP_RATE_10MM']
 

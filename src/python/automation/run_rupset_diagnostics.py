@@ -97,11 +97,7 @@ if __name__ == "__main__":
         file_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
 
         #get input files from API
-        upstream_task_id = "R2VuZXJhbFRhc2s6NDAzOTNpVmI=" ##Coulomb Stirling minSS 3,4,5
-        upstream_task_id = "R2VuZXJhbFRhc2s6NjE1aHdiNFM=" ##subduction
-        upstream_task_id = "R2VuZXJhbFRhc2s6OTg1MzR5dnQ=" ##subduction shortened
-        upstream_task_id = "R2VuZXJhbFRhc2s6MTMzMGFSU2Jx"
-
+        upstream_task_id = "R2VuZXJhbFRhc2s6MTk0NTJNS2dN" ##
 
         """
         CHOOSE ONE OF:
