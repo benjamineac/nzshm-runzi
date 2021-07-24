@@ -5,6 +5,7 @@ import os
 import uuid
 from pathlib import PurePath
 import platform
+import time
 
 from py4j.java_gateway import JavaGateway, GatewayParameters
 import datetime as dt
@@ -15,10 +16,8 @@ from nshm_toshi_client.rupture_generation_task import RuptureGenerationTask
 from nshm_toshi_client.general_task import GeneralTask
 from nshm_toshi_client.task_relation import TaskRelation
 
-from scaling.toshi_api import ToshiApi
+from src.automation.scaling.toshi_api import ToshiApi
 
-
-import time
 
 API_URL  = os.getenv('NZSHM22_TOSHI_API_URL', "http://127.0.0.1:5000/graphql")
 API_KEY = os.getenv('NZSHM22_TOSHI_API_KEY', "")
@@ -34,7 +33,7 @@ class BuilderTask():
 
         #setup the java gateway binding
         self._gateway = JavaGateway(gateway_parameters=GatewayParameters(port=job_args['java_gateway_port']))
-        repos = ["opensha", "nshm-nz-opensha"]
+        repos = ["opensha", "nzshm-opensha", "nzshm-runzi"]
         self._repoheads = get_repo_heads(PurePath(job_args['root_folder']), repos)
         self._output_folder = PurePath(job_args.get('working_path'))
 
@@ -56,7 +55,9 @@ class BuilderTask():
         environment = {
             "host": platform.node(),
             "gitref_opensha":self._repoheads['opensha'],
-            "gitref_nshm-nz-opensha":self._repoheads['nshm-nz-opensha'] }
+            "gitref_nzshm-opensha":self._repoheads['nzshm-opensha'],
+            "gitref_nzshm-runzi":self._repoheads['nzshm-runzi']
+            }
 
         if self.use_api:
             #create new task in toshi_api
