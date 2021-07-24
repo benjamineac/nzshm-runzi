@@ -177,6 +177,7 @@ if __name__ == "__main__":
     GID = "R2VuZXJhbFRhc2s6MTg2NkdyZDRY="
     GID = "R2VuZXJhbFRhc2s6MTk0NTJNS2dN"
     GID = "R2VuZXJhbFRhc2s6MjAwNU1veHM5"
+    GID = "R2VuZXJhbFRhc2s6NzA4Q3RieTg=" #TEST API example
 
     UPLOAD_FOLDER = "DATA24"
 

@@ -15,23 +15,23 @@ from setuptools import find_packages, setup, Command
 
 # Package meta-data.
 
-NAME = 'automation'
+NAME = 'nzshm-runzi'
 DESCRIPTION = 'My short description for my project.'
 URL = 'https://github.com/GNS-Science/nshm-nz-opensha'
 EMAIL = 'chrisbc@artisan.co.nz'
 AUTHOR = 'GNS NSHM programme'
 REQUIRES_PYTHON = '>=3.6.0'
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 
 # What packages are required for this module to be executed?
-REQUIRED = [ ]
-#     'GitPython==3.1.11,
-#     'gql==2.0.0',
-#     'py4j==0.10.9.1',
-#     'python-dateutil==2.8.1',
-#     'pytz',
-#     'git+https://github.com/GNS-Science/nshm-toshi-client#egg=nshm_toshi_client',
-# ]
+REQUIRED = [
+'GitPython==3.1.11',
+'gql==2.0.0',
+'py4j==0.10.9.1',
+'python-dateutil==2.8.1',
+'pytz',
+# 'git+https://github.com/GNS-Science/nshm-toshi-client#egg=nshm_toshi_client'
+]
 
 # What packages are optional?
 EXTRAS = {

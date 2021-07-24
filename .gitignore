@@ -4,6 +4,4 @@ bin/**
 lib/**
 pyvenv.cfg
 share/**
-src/**
-**/tmp/**
 **.egg-info/**
