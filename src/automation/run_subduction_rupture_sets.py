@@ -25,8 +25,8 @@ from scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
 
 # If you wish to override something in the main config, do so here ..
 WORKER_POOL_SIZE = 1
-JVM_HEAP_MAX = 56
-JVM_HEAP_START = 16
+JVM_HEAP_MAX = 12
+JVM_HEAP_START = 2
 
 
 def build_tasks(general_task_id, mmodels, min_aspect_ratios, max_aspect_ratios, aspect_depth_thresholds, min_fill_ratios,
@@ -97,21 +97,21 @@ if __name__ == "__main__":
     t0 = dt.datetime.utcnow()
 
     GENERAL_TASK_ID = None
-    #USE_API = False
+    USE_API = False
 
     #If using API give this task a descriptive setting...
-    TASK_TITLE = "Build Hikurangi/Kermadec & Hikurangi/Louisville ruptsets with constant 10mm slip rate"
+    TASK_TITLE = "Build Hikurangi/Louisville ruptsets with new Fault model SBD_0_2_HKR_LR_30"
 
     TASK_DESCRIPTION = """
-     - models = [SBD_0_1_HKR_KRM_30, SBD_0_1_HKR_LR_30]
+     - models = [SBD_0_2_HKR_LR_30]
      - min_aspect_ratio = 2.0
      - max_aspect_ratio = 5.0
      - aspect_depth_threshold = 5
-     - min_fill_ratios = [0.2, 0.1,]
+     - min_fill_ratios = [0.5]
      - growth_position_epsilons = [0.0]
      - growth_size_epsilons = [0.0]
      - scaling_relationships = [TMG_SUB_2017]
-     - deformation_models = [GLOBAL_SLIP_RATE_10MM]
+     - deformation_models = [None]
 
     """
 
@@ -130,16 +130,16 @@ if __name__ == "__main__":
         print("GENERAL_TASK_ID:", GENERAL_TASK_ID)
 
     ##Test parameters
-    models = ["SBD_0_1_HKR_LR_10_FEC", ] #"SBD_0_1_HKR_KRM_10"]
+    models = ["SBD_0_2_HKR_LR_30", ] #"SBD_0_1_HKR_KRM_10"]
 
     min_aspect_ratios = [2.0,]
     max_aspect_ratios = [5.0,]
     aspect_depth_thresholds = [5,]
-    min_fill_ratios = [0.1]
+    min_fill_ratios = [0.5]
     growth_position_epsilons = [0.0] #0.02, 0.01]
     growth_size_epsilons =  [0.0] #0.02, 0.01]
     scaling_relationships = ["TMG_SUB_2017"]
-    deformation_models = ['GLOBAL_SLIP_RATE_10MM']
+    deformation_models = [None,]
 
     pool = Pool(WORKER_POOL_SIZE)
 
