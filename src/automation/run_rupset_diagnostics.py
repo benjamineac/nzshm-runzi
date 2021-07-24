@@ -93,11 +93,12 @@ if __name__ == "__main__":
     if USE_API:
         headers={"x-api-key":API_KEY}
 
-        general_api = GeneralTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
-        file_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
+        #general_api = GeneralTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
+        toshi_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
 
         #get input files from API
         upstream_task_id = "R2VuZXJhbFRhc2s6MTk0NTJNS2dN" ##
+        upstream_task_id = "R2VuZXJhbFRhc2s6NzE2YWV2a3E=" ##test
 
         """
         CHOOSE ONE OF:
@@ -106,10 +107,10 @@ if __name__ == "__main__":
          - file_generator = get_output_file_ids(general_api, upstream_task_id)
         """
         #for a single rupture set, pass a valid FileID
-        #file_generator = get_output_file_id(file_api, file_id) #for file by file ID
-        file_generator = get_output_file_ids(general_api, upstream_task_id)
+        #file_generator = get_output_file_id(toshi_api, file_id) #for file by file ID
+        file_generator = get_output_file_ids(toshi_api, upstream_task_id)
 
-        rupture_sets = download_files(file_api, file_generator, str(WORK_PATH), overwrite=False)
+        rupture_sets = download_files(toshi_api, file_generator, str(WORK_PATH), overwrite=False)
 
         # print("GENERAL_TASK_ID:", GENERAL_TASK_ID)
 

@@ -97,7 +97,7 @@ if __name__ == "__main__":
     t0 = dt.datetime.utcnow()
 
     GENERAL_TASK_ID = None
-    USE_API = False
+    #USE_API = False
 
     #If using API give this task a descriptive setting...
     TASK_TITLE = "Build Hikurangi/Louisville ruptsets with new Fault model SBD_0_2_HKR_LR_30"
