@@ -11,6 +11,8 @@ from nshm_toshi_client.toshi_client_base import ToshiClientBase, kvl_to_graphql
 from nshm_toshi_client.toshi_file import ToshiFile
 from nshm_toshi_client.toshi_task_file import ToshiTaskFile
 
+from .inversion_solution import InversionSolution
+from .general_task import GeneralTask, CreateGeneralTaskArgs
 
 class ToshiApi(ToshiClientBase):
 
@@ -23,6 +25,7 @@ class ToshiApi(ToshiClientBase):
 
         #set up the handler for inversion_solution operations
         self.inversion_solution = InversionSolution(self)
+        self.general_task = GeneralTask(self)
 
 
     def get_general_task_subtask_files(self, id):
@@ -177,9 +180,10 @@ class ToshiApi(ToshiClientBase):
 
 
 
-    def create_table(self, rows, column_headers, column_types, object_id, table_name, created=None):
+    def create_table(self, rows, column_headers, column_types, object_id, table_name, table_type, dimensions, created=None):
 
         created = created or dt.utcnow().isoformat() + 'Z'
+        dimensions = dimensions or []
 
         rowlen = len(column_headers)
         assert len(column_types) == rowlen
@@ -195,14 +199,18 @@ class ToshiApi(ToshiClientBase):
           "rows": rows,
           "column_types": column_types,
           "table_name": table_name,
-          "created": created
+          "created": created,
+          "table_type": table_type,
+          "dimensions": dimensions
         }
 
         qry = '''
-        mutation create_table ($rows: [[String]]!, $object_id: ID!, $table_name: String!, $headers: [String]!, $column_types: [RowItemType]!, $created: DateTime!) {
+        mutation create_table ($rows: [[String]]!, $object_id: ID!, $table_name: String!, $headers: [String]!, $column_types: [RowItemType]!, $created: DateTime!, $table_type: TableType!, $dimensions: [KeyValueListPairInput]!) {
           create_table(input: {
             name: $table_name
             created: $created
+            table_type: $table_type
+            dimensions: $dimensions
             object_id: $object_id
             column_headers: $headers
             column_types: $column_types
@@ -224,13 +232,14 @@ class InversionSolution(object):
     def __init__(self, api):
         self.api = api
 
-    def upload_inversion_solution(self, task_id, filepath, mfd_table, meta=None,  metrics=None):
+    def upload_inversion_solution(self, task_id, filepath, mfd_table=None, meta=None,  metrics=None):
         filepath = PurePath(filepath)
         file_id, post_url = self._create_inversion_solution(filepath, task_id, mfd_table, meta, metrics)
         self.upload_content(post_url, filepath)
 
         #link file to task in role
-        return self.api.task_file.create_task_file(task_id, file_id, 'WRITE')
+        self.api.task_file.create_task_file(task_id, file_id, 'WRITE')
+        return file_id
 
     def upload_content(self, post_url, filepath):
         #print('upload_content **** POST DATA %s' % post_url )
@@ -252,7 +261,7 @@ class InversionSolution(object):
     #     self.api.file.upload_content(post_url, filepath)
     #     return file_id
 
-    def _create_inversion_solution(self, filepath, produced_by, mfd_table, meta=None, metrics=None):
+    def _create_inversion_solution(self, filepath, produced_by, mfd_table=None, meta=None, metrics=None):
         qry = '''
             mutation ($created: DateTime!, $digest: String!, $file_name: String!, $file_size: Int!, $produced_by: ID!) {
               create_inversion_solution(input: {
@@ -303,3 +312,25 @@ class InversionSolution(object):
 
         return (executed['create_inversion_solution']['inversion_solution']['id'], post_url)
 
+
+    def append_hazard_table(self, inversion_solution_id, mfd_table_id, label, table_type, dimensions):
+        qry = '''
+            mutation ($input: AppendInversionSolutionTablesInput!) {
+              append_inversion_solution_tables(input: $input)
+               {
+               ok
+               inversion_solution {
+                  id,
+                  tables {
+                    identity
+                    table_id
+                    table {
+                     id
+                    }
+                  }
+                }
+              }
+            }
+        '''
+        input_args = dict(id=inversion_solution_id, tables=[dict(label=label, table_id=mfd_table_id, table_type=table_type, dimensions=dimensions)])
+        return self.api.run_query(qry, dict(input=input_args))
