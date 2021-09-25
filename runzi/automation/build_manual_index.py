@@ -101,7 +101,7 @@ def rgt_template(rgt, display_keys=None):
 
     if fname:
         return f'''<li>
-            <a href="{TUI}RuptureGenerationTask/{rid}">{rid}</a> result: {result} &nbsp;
+            <a href="{TUI}Find/{rid}">{rid}</a> result: {result} &nbsp;
             <a href="{TUI}FileDetail/{fid}">File detail</a> &nbsp;
             <a href="{UPLOAD_FOLDER}/{fid}/DiagnosticsReport/index.html">Diagnostics report</a>
             <br />
@@ -127,8 +127,12 @@ def haz_plots_div(fid):
                 code = filename[offset+1: offset+3]
                 yield f'<a href="{UPLOAD_FOLDER}/{fid}/{filename}">{code}</a>'
             break
-    return f'''Hazard: {'&nbsp;'.join(generate_links(fid))}'''
+    return f'''Hazard: {'&nbsp;'.join(generate_links(fid))}&nbsp;'''
 
+
+def solution_diags_div(fid):
+    if Path(f"{WORK_FOLDER}/{UPLOAD_FOLDER}/{fid}", 'solution_report').exists():
+        return f'''<a href="{UPLOAD_FOLDER}/{fid}/solution_report/index.html">Diagnostics</a> &nbsp;'''
 
 def inv_template(rgt, display_keys=None):
 
@@ -164,14 +168,19 @@ def inv_template(rgt, display_keys=None):
             named_faults_link = f'<a href="{UPLOAD_FOLDER}/{fid}/named_fault_mfds/mfd_index.html">Named fault MFDs</a>'
 
         #only add hazrad if they're then
+
         hazard_plots = haz_plots_div(fid) or ''
+        #only add diags if they're then
+        solution_diags = solution_diags_div(fid) or ''
 
         return f'''<li>
-            <a href="{TUI}RuptureGenerationTask/{rid}">{rid}</a> result: {result}&nbsp;
+            <a href="{TUI}Find/{rid}">{rid}</a> result: {result}&nbsp;
             <a href="{TUI}InversionSolution/{fid}">Inversion Solution detail</a>&nbsp;
             <a href="{UPLOAD_FOLDER}/{fid}/mag_rates/MAG_rates_log_fixed_yscale.png">Mag Rate overall</a>&nbsp;
-            {named_faults_link}&nbsp;
+            {solution_diags}
+            {named_faults_link}
             {hazard_plots}
+
             <br />
             <div class="display_info">{display_info}</div>
             <br />
@@ -194,9 +203,11 @@ if __name__ == "__main__":
     GID = "R2VuZXJhbFRhc2s6NzA4Q3RieTg=" #TEST API example
     GID = "R2VuZXJhbFRhc2s6NzIybjVvc0I=" #TEST RUPT SET
     GID = "R2VuZXJhbFRhc2s6NzI2ejQ4SlQ=" #TEST INVERSION
-    GID = "R2VuZXJhbFRhc2s6MjY2NHpONWtl"
+    GID = "R2VuZXJhbFRhc2s6MjY4M1FGajVh"
+    GID = "R2VuZXJhbFRhc2s6MjcxNkdIVTUy"
+    GID = "R2VuZXJhbFRhc2s6Mjg5OTllb3VZ"
 
-    UPLOAD_FOLDER = "DATA33"
+    UPLOAD_FOLDER = "DATA38"
 
     TUI = "http://simple-toshi-ui.s3-website-ap-southeast-2.amazonaws.com/"
     WORK_FOLDER = "/home/chrisbc/DEV/GNS/opensha-new/AWS_S3_DATA"
@@ -205,10 +216,10 @@ if __name__ == "__main__":
     # print(gentask)
     node = gentask
 
-    info_keys = ['mfd_equality_weight',
-         'mfd_inequality_weight',
-         'slip_rate_normalized_weight',
-         'slip_rate_unnormalized_weight' ] # 'round', 'max_inversion_time', 'mfd_transition_mag',
+    # info_keys = ['mfd_equality_weight',
+    #      'mfd_inequality_weight',
+    #      'slip_rate_normalized_weight',
+    #      'slip_rate_unnormalized_weight' ] # 'round', 'max_inversion_time', 'mfd_transition_mag',
     #info_keys = ['fault_model', 'min_fill_ratio',] #'growth_size_epsilon'] # for ruptget on subduction
     #info_keys = ['round',]
     #info_keys = ['mfd_equality_weight', 'mfd_inequality_weight','slip_rate_unnormalized_weight' ] # 'round', 'max_inversion_time'
@@ -216,6 +227,7 @@ if __name__ == "__main__":
     #info_keys = ['round', 'mfd_mag_gt_5', 'mfd_b_value']
     #info_keys = ['mfd_mag_gt_5_sans', 'mfd_mag_gt_5_tvz']
     #info_keys = []
+    info_keys = ["mfd_uncertainty_weight", "mfd_uncertainty_power", "perturbation_function"]
 
     #Write Section info
     print(gt_template(node))

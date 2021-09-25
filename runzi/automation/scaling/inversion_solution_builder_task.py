@@ -16,7 +16,7 @@ from nshm_toshi_client.rupture_generation_task import RuptureGenerationTask
 from nshm_toshi_client.general_task import GeneralTask
 from nshm_toshi_client.task_relation import TaskRelation
 
-from src.automation.scaling.toshi_api import ToshiApi
+from runzi.automation.scaling.toshi_api import ToshiApi
 
 
 API_URL  = os.getenv('NZSHM22_TOSHI_API_URL', "http://127.0.0.1:5000/graphql")
@@ -39,11 +39,10 @@ class BuilderTask():
 
         if self.use_api:
             headers={"x-api-key":API_KEY}
-            self._ruptgen_api = RuptureGenerationTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
+            # self._ruptgen_api = RuptureGenerationTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
             self._general_api = GeneralTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
             self._task_relation_api = TaskRelation(API_URL, None, with_schema_validation=True, headers=headers)
             self._toshi_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
-
 
     def run(self, task_arguments, job_arguments):
 
@@ -61,8 +60,11 @@ class BuilderTask():
 
         if self.use_api:
             #create new task in toshi_api
-            task_id = self._ruptgen_api.create_task(
-                dict(created=dt.datetime.now(tzutc()).isoformat()),
+            task_id = self._toshi_api.automation_task.create_task(
+                dict(
+                    created=dt.datetime.now(tzutc()).isoformat(),
+                    task_type="INVERSION"
+                    ),
                 arguments=task_arguments,
                 environment=environment
                 )
@@ -73,7 +75,7 @@ class BuilderTask():
             # #link task to the input datafile
             input_file_id = task_arguments.get('rupture_set_file_id')
             if input_file_id:
-                self._ruptgen_api.link_task_file(task_id, input_file_id, 'READ')
+                self._toshi_api.automation_task.link_task_file(task_id, input_file_id, 'READ')
 
         else:
             task_id = str(uuid.uuid4())
@@ -84,12 +86,13 @@ class BuilderTask():
         ## TODO new runner for subduction needed
         if ta['config_type'] == 'crustal':
             inversion_runner = self._gateway.entry_point.getCrustalInversionRunner()
-            inversion_runner.setGutenbergRichterMFD(
-                    float(ta['mfd_mag_gt_5_sans']),
-                    float(ta['mfd_mag_gt_5_tvz']),
-                    float(ta['mfd_b_value_sans']),
-                    float(ta['mfd_b_value_tvz']),
-                    float(ta['mfd_transition_mag']))
+            # TODO: this is API method is temporarily missing in nzshm-opensha/modular
+            # inversion_runner.setGutenbergRichterMFD(
+            #         float(ta['mfd_mag_gt_5_sans']),
+            #         float(ta['mfd_mag_gt_5_tvz']),
+            #         float(ta['mfd_b_value_sans']),
+            #         float(ta['mfd_b_value_tvz']),
+            #         float(ta['mfd_transition_mag']))
             inversion_runner.setGutenbergRichterMFDWeights(
                     float(ta['mfd_equality_weight']),
                     float(ta['mfd_inequality_weight']))
@@ -117,20 +120,30 @@ class BuilderTask():
                 .setGutenbergRichterMFD(
                     float(ta['mfd_mag_gt_5']),
                     float(ta['mfd_b_value']),
-                    float(ta['mfd_transition_mag']))
+                    float(ta['mfd_transition_mag']))\
+                .setUncertaintyWeightedMFDWeights(
+                    float(ta['mfd_uncertainty_weight']),
+                    float(ta['mfd_uncertainty_power']))
 
         inversion_runner\
             .setInversionSeconds(int(float(ta['max_inversion_time']) * 60))\
             .setEnergyChangeCompletionCriteria(float(0), float(ta['completion_energy']), float(1))\
-            .setNumThreads(int(job_arguments["java_threads"]))\
-            .setSyncInterval(30)\
+            .setSelectionInterval(int(ta["selection_interval_secs"]))\
+            .setNumThreadsPerSelector(int(ta["threads_per_selector"]))\
+            .setNonnegativityConstraintType(ta['non_negativity_function'])\
+            .setPerturbationFunction(ta['perturbation_function'])\
             .setRuptureSetFile(str(PurePath(job_arguments['working_path'], ta['rupture_set'])))
+
+        if ta.get("averaging_threads"):
+            inversion_runner.setInversionAveraging(
+                int(ta["averaging_threads"]),
+                int(ta["averaging_interval_secs"]))
 
         #int(ta['max_inversion_time'] * 60))\
 
         print("Starting inversion of up to %s minutes" % ta['max_inversion_time'])
         print("======================================")
-        inversion_runner.configure().runInversion()
+        inversion_runner.runInversion()
 
         output_file = str(PurePath(job_arguments['working_path'], f"NZSHM22_InversionSolution-{task_id}.zip"))
         #name the output file
@@ -139,7 +152,6 @@ class BuilderTask():
 
         # output_file = str(PurePath(job_arguments['output_file']))
         inversion_runner.writeSolution(output_file)
-
 
         t1 = dt.datetime.utcnow()
         print("Inversion took %s secs" % (t1-t0).total_seconds())
@@ -157,6 +169,8 @@ class BuilderTask():
         # metrics['by_fault_name'] = inversion_runner.byFaultNameMetrics()
         # metrics['parent_fault_moment_rates'] = inversion_runner.parentFaultMomentRates()
 
+        table_rows = inversion_runner.getTabularSolutionMfds()
+
         if self.use_api:
             #record the completed task
             done_args = {
@@ -165,13 +179,13 @@ class BuilderTask():
              'result':"SUCCESS",
              'state':"DONE",
             }
-            self._ruptgen_api.complete_task(done_args, metrics)
+            self._toshi_api.automation_task.complete_task(done_args, metrics)
 
             #and the log files, why not
             java_log_file = self._output_folder.joinpath(f"java_app.{job_arguments['java_gateway_port']}.log")
-            self._ruptgen_api.upload_task_file(task_id, java_log_file, 'WRITE')
+            self._toshi_api.automation_task.upload_task_file(task_id, java_log_file, 'WRITE')
             pyth_log_file = self._output_folder.joinpath(f"python_script.{job_arguments['java_gateway_port']}.log")
-            self._ruptgen_api.upload_task_file(task_id, pyth_log_file, 'WRITE')
+            self._toshi_api.automation_task.upload_task_file(task_id, pyth_log_file, 'WRITE')
 
             #upload the task output
             inversion_id = self._toshi_api.inversion_solution.upload_inversion_solution(task_id, filepath=output_file,
@@ -180,13 +194,12 @@ class BuilderTask():
 
             # # now get the MFDS...
             mfd_table_id = None
-            table_rows = inversion_runner.getTabularSolutionMfds()
 
             mfd_table_data = []
             for row in table_rows:
                 mfd_table_data.append([x for x in row])
 
-            result = self._toshi_api.create_table(
+            result = self._toshi_api.table.create_table(
                 mfd_table_data,
                 column_headers = ["series", "series_name", "X", "Y"],
                 column_types = ["integer","string","double","double"],
@@ -201,7 +214,6 @@ class BuilderTask():
                 table_type="MFD_CURVES",
                 dimensions=None,
             )
-
             print("created & linked table: ", mfd_table_id)
 
         else:
