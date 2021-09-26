@@ -46,8 +46,8 @@ class BuilderTask():
 
     def run(self, task_arguments, job_arguments):
 
-        # print(task_arguments)
-        # print(job_arguments)
+        # Run the task....
+        ta = task_arguments
 
         t0 = dt.datetime.utcnow()
 
@@ -63,7 +63,8 @@ class BuilderTask():
             task_id = self._toshi_api.automation_task.create_task(
                 dict(
                     created=dt.datetime.now(tzutc()).isoformat(),
-                    task_type="INVERSION"
+                    task_type="INVERSION",
+                    model_type=ta['config_type'].upper(),
                     ),
                 arguments=task_arguments,
                 environment=environment
@@ -80,12 +81,10 @@ class BuilderTask():
         else:
             task_id = str(uuid.uuid4())
 
-        # Run the task....
-        ta = task_arguments
 
-        ## TODO new runner for subduction needed
         if ta['config_type'] == 'crustal':
             inversion_runner = self._gateway.entry_point.getCrustalInversionRunner()
+
             # TODO: this is API method is temporarily missing in nzshm-opensha/modular
             # inversion_runner.setGutenbergRichterMFD(
             #         float(ta['mfd_mag_gt_5_sans']),
@@ -111,6 +110,7 @@ class BuilderTask():
 
         elif ta['config_type'] == 'subduction':
             inversion_runner = self._gateway.entry_point.getSubductionInversionRunner()
+
             inversion_runner.setGutenbergRichterMFDWeights(
                     float(ta['mfd_equality_weight']),
                     float(ta['mfd_inequality_weight']))\
@@ -125,14 +125,18 @@ class BuilderTask():
                     float(ta['mfd_uncertainty_weight']),
                     float(ta['mfd_uncertainty_power']))
 
+        if ta.get('scaling_relationship') and ta.get('scaling_recalc_mag'):
+            inversion_runner.setScalingRelationship(ta.get('scaling_relationship'), bool(ta.get('scaling_recalc_mag')))
+
         inversion_runner\
             .setInversionSeconds(int(float(ta['max_inversion_time']) * 60))\
             .setEnergyChangeCompletionCriteria(float(0), float(ta['completion_energy']), float(1))\
             .setSelectionInterval(int(ta["selection_interval_secs"]))\
             .setNumThreadsPerSelector(int(ta["threads_per_selector"]))\
             .setNonnegativityConstraintType(ta['non_negativity_function'])\
-            .setPerturbationFunction(ta['perturbation_function'])\
-            .setRuptureSetFile(str(PurePath(job_arguments['working_path'], ta['rupture_set'])))
+            .setPerturbationFunction(ta['perturbation_function'])
+
+        inversion_runner.setRuptureSetFile(str(PurePath(job_arguments['working_path'], ta['rupture_set'])))
 
         if ta.get("averaging_threads"):
             inversion_runner.setInversionAveraging(
