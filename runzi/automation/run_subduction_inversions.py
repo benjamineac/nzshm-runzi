@@ -114,7 +114,7 @@ def build_subduction_tasks(general_task_id, rupture_sets, args):
             os.chmod(script_file_path, st.st_mode | stat.S_IEXEC)
 
             yield str(script_file_path)
-            #return
+            return
 
 if __name__ == "__main__":
 
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     WORKER_POOL_SIZE = 2
     JVM_HEAP_MAX = 12
     JAVA_THREADS = 0
-    #USE_API = False
+    USE_API = False
 
     #If using API give this task a descriptive setting...
     TASK_TITLE = "Inversion on Subduction  - NZ Simplified slip scaling (Upper/Lower)"
@@ -137,17 +137,15 @@ if __name__ == "__main__":
 
     headers={"x-api-key":API_KEY}
     toshi_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
-    # general_api = GeneralTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
-    # file_api = ToshiFile(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
-    # file_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
 
-    #file_id = "RmlsZToxNDkzLjBmbkh4eA=="
     file_id = "RmlsZToxNTMwLjBxVU5iaQ==" #TEST
     file_id = "RmlsZTo0NDYxLjBEVTRicA=="
     file_id = "RmlsZToxNTU5LjByWmtXYw==" #test new subdction
     file_id = "RmlsZToyMzAxLjBSZWthZg==" #SBD_0_3_HKR_LR_30 TEST
-    #file_id = "RmlsZTo3MTQ3LjVramh3Rg==" #SBD_0_3_HKR_LR_30 PROD
-    #file_id = "RmlsZTo4MTAzLjVwbXJ0dQ=="
+    #file_id = "RmlsZTo3MTQ3LjVramh3Rg==" #SBD_0_3_HKR_LR_30 PROD Trench-locked
+    #file_id = "RmlsZTo4MTAzLjVwbXJ0dQ==" #SBD_0_4_HKR_LR_30 PROD Kermits Revenge
+    #file_id = "RmlsZTo1MzcwLjA5andhYw==" #SBD_0_2A_HKR_LR_30 PROD East Cape smoothing
+
 
     args = dict(
         rounds = [str(x) for x in range(1)],
@@ -175,10 +173,10 @@ if __name__ == "__main__":
         threads_per_selectors = ['4'],
         averaging_threads = ['4'],
         averaging_interval_secs = ['30'],
-        non_negativity_functions = ['LIMIT_ZERO_RATES'], # TRY_ZERO_RATES_OFTEN,  LIMIT_ZERO_RATES, PREVENT_ZERO_RATES
+        non_negativity_functions = ['TRY_ZERO_RATES_OFTEN'], # TRY_ZERO_RATES_OFTEN,  LIMIT_ZERO_RATES, PREVENT_ZERO_RATES
         perturbation_functions = ['EXPONENTIAL_SCALE'], #,'EXPONENTIAL_SCALE'], # UNIFORM_NO_TEMP_DEPENDENCE, EXPONENTIAL_SCALE;
 
-        #adding Scalgn Relationships
+        #Scaling Relationships
         scaling_relationships=['SMPL_NZ_INT_LW', 'SMPL_NZ_INT_UP'],
         scaling_recalc_mags=['True']
     )
