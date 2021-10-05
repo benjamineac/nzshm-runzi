@@ -12,22 +12,22 @@ from unittest import mock
 
 # from nshm_toshi_client.general_task import GeneralTask
 # from nshm_toshi_client.toshi_file import ToshiFile
-from scaling.toshi_api import ToshiApi, CreateGeneralTaskArgs
+from .scaling.toshi_api import ToshiApi, CreateGeneralTaskArgs
 
-from scaling.opensha_task_factory import OpenshaTaskFactory
-from scaling.file_utils import download_files, get_output_file_id, get_output_file_ids
+from .scaling.opensha_task_factory import OpenshaTaskFactory
+from .scaling.file_utils import download_files, get_output_file_id, get_output_file_ids
 
-import scaling.inversion_solution_builder_task
+from .scaling import inversion_solution_builder_task
 
 # Set up your local config, from environment variables, with some sone defaults
-from scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
+from .scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
     JVM_HEAP_MAX, JVM_HEAP_START, USE_API, JAVA_THREADS,
     API_KEY, API_URL, S3_URL, CLUSTER_MODE)
 
 
 def build_subduction_tasks(general_task_id, rupture_sets, args):
     task_count = 0
-    task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, scaling.inversion_solution_builder_task,
+    task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, inversion_solution_builder_task,
         initial_gateway_port=27933,
         jre_path=OPENSHA_JRE, app_jar_path=FATJAR,
         task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START,
@@ -184,8 +184,8 @@ if __name__ == "__main__":
      - file_generator = get_output_file_id(file_api, file_id)
      - file_generator = get_output_file_ids(general_api, upstream_task_id)
     """
-    #for a single rupture set, pass a valid FileID
     file_generator = get_output_file_id(toshi_api, file_id) #for file by file ID
+    #for a single rupture set, pass a valid FileID
 
     rupture_sets = download_files(toshi_api, file_generator, str(WORK_PATH), overwrite=False)
 
