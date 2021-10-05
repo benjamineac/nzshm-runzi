@@ -8,6 +8,7 @@ from multiprocessing.dummy import Pool
 
 import datetime as dt
 from dateutil.tz import tzutc
+from unittest import mock
 
 # from nshm_toshi_client.general_task import GeneralTask
 # from nshm_toshi_client.toshi_file import ToshiFile
@@ -216,8 +217,13 @@ if __name__ == "__main__":
         else:
             check_call(['bash', script_name])
 
+    MOCK_MODE = True
+
     print('task count: ', len(scripts))
     print('worker count: ', WORKER_POOL_SIZE)
+
+    if MOCK_MODE:
+        call_script = mock.Mock(call_script)
 
     pool = Pool(WORKER_POOL_SIZE)
     pool.map(call_script, scripts)
@@ -225,3 +231,5 @@ if __name__ == "__main__":
     pool.join()
 
     print("Done! in %s secs" % (dt.datetime.utcnow() - t0).total_seconds())
+
+
