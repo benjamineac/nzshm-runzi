@@ -1,6 +1,6 @@
 import json
 import pprint
-from runzi.cli.cli_helpers import pprint_color
+from runzi.cli.cli_helpers import pprint_color, to_json_format, from_json_format
 from pathlib import Path
 
 class Config:
@@ -18,13 +18,12 @@ class Config:
         self._mock_mode = mock_mode
 
     def to_json(self):
-        path = Path(Path(__file__).resolve().parent / 'saved_configs')
+        path = Path(__file__).resolve().parent / 'saved_configs'
         jsonpath = path / f'{self._file_id}_config.json'
         path.mkdir(exist_ok=True)
-        json_dict = {k[1:] : v for k, v in self.__dict__.items()}
-
+        json_dict = to_json_format(self.__dict__)
         pprint_color(json_dict)
-        jsonpath.write_text(json.dump(json_dict))
+        jsonpath.write_text(json.dumps(json_dict, indent=4))
 
     def get_task_args(self):
         non_args = ['_worker_pool_size', '_jvm_heap_max', '_java_threads',

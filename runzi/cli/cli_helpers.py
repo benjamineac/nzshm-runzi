@@ -64,8 +64,9 @@ class MenuHandler():
                 res = fn(cmd_part, remainder)
                 # print(type(fn), dir(fn))
                 if not (hasattr(fn, '__self__') and isinstance(fn.__self__, MenuHandler)):
-                    print(res)
-
+                    None
+                    # print(res)
+                    # print('This is where the problem is lmao')
                     # print(fn.__self__)?
                 continue
         if not matched:
@@ -109,3 +110,9 @@ class NumberValidator(Validator):
             raise ValidationError(message='This input must be an integer -- no non-numeric characters please',
                                   cursor_position=i)
 
+
+def to_json_format(config):
+    return {k[1:] : v for k, v in config.items()}
+
+def from_json_format(config):
+    return {'_' + k : v for k, v in config.items()}

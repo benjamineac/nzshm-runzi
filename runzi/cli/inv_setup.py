@@ -3,7 +3,6 @@ import pprint
 from prompt_toolkit import prompt 
 from pprint import PrettyPrinter
 import inquirer
-from inquirer.themes import GreenPassion
 from config.inversion_builder import CrustalConfig, SubductionConfig
 from cli_helpers import pprint_color, NumberValidator
 
@@ -82,7 +81,7 @@ def change_values(*args):
             message='Would you like to change another value?',
         ),    
     ]
-    answers = inquirer.prompt(question_list, theme=GreenPassion())
+    answers = inquirer.prompt(question_list)
     save_to_json = inquirer.confirm('Would you like to save this config to JSON?')
     arg = answers['arg']
     val = answers['value'].split(' ')
