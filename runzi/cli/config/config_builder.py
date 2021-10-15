@@ -16,7 +16,7 @@ class Config:
         self._general_task_id = general_task_id
         self._file_id = file_id
         self._mock_mode = mock_mode
-
+    
     def to_json(self):
         path = Path(__file__).resolve().parent / 'saved_configs'
         jsonpath = path / f'{self._file_id}_config.json'

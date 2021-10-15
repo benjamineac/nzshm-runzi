@@ -98,7 +98,7 @@ def change_values(*args):
 
     if answers['continue'] == False:
         print("Here are your new values!")
-        pprint_color(global_config.get_args())
+        pprint_color(global_config.get_task_args())
         save_query()
     
 

@@ -25,7 +25,7 @@ from runzi.automation.scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPEN
 
 def run_subduction_inversion(config):
     t0 = dt.datetime.utcnow()
-    
+
     WORKER_POOL_SIZE = config._worker_pool_size
     JVM_HEAP_MAX = config._jvm_heap_max
     JAVA_THREADS = config._java_threads
@@ -40,7 +40,7 @@ def run_subduction_inversion(config):
     headers={"x-api-key":API_KEY}
     toshi_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
     
-    args = config.get_args()
+    args = config.get_task_args()
     args_list = []
     for key, value in args.items():
         args_list.append(dict(k=key, v=value))
