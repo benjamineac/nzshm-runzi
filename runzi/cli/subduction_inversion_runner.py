@@ -24,6 +24,7 @@ from runzi.automation.scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPEN
     API_KEY, API_URL, S3_URL, CLUSTER_MODE)
 
 def run_subduction_inversion(config):
+    t0 = dt.datetime.utcnow()
     
     WORKER_POOL_SIZE = config._worker_pool_size
     JVM_HEAP_MAX = config._jvm_heap_max
@@ -86,4 +87,4 @@ def run_subduction_inversion(config):
     pool.close()
     pool.join()
 
-    print("Done! in %s secs" % (dt.datetime.utcnow() - tz).total_seconds())
+    print("Done! in %s secs" % (dt.datetime.utcnow() - t0).total_seconds())

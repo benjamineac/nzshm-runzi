@@ -1,9 +1,11 @@
 import json
 import pprint
+from runzi.cli.cli_helpers import pprint_color
+from pathlib import Path
 
 class Config:
-    def __init__(self, task_title, task_description, worker_pool_size, jvm_heap_max,
-    java_threads, use_api, general_task_id, file_id, mock_mode) -> None:
+    def __init__(self, task_title, task_description, file_id, worker_pool_size = 2, jvm_heap_max = 12,
+    java_threads = 0, use_api = False, general_task_id = None, mock_mode = False) -> None:
 
         self._task_title = task_title
         self._task_description = task_description
@@ -16,12 +18,15 @@ class Config:
         self._mock_mode = mock_mode
 
     def to_json(self):
-        file_name = f'{self._file_id}_config.json'
-        out_file = open(file_name, "w")
-        json.dump(self.__dict__, out_file, indent = 2)
-        out_file.close()
+        path = Path(Path(__file__).resolve().parent / 'saved_configs')
+        jsonpath = path / f'{self._file_id}_config.json'
+        path.mkdir(exist_ok=True)
+        json_dict = {k[1:] : v for k, v in self.__dict__.items()}
 
-    def get_args(self):
+        pprint_color(json_dict)
+        jsonpath.write_text(json.dump(json_dict))
+
+    def get_task_args(self):
         non_args = ['_worker_pool_size', '_jvm_heap_max', '_java_threads',
         '_subtask_type', '_use_api', '_task_title', '_task_description', 
         '_general_task_id', '_file_id', '_mock_mode', '_model_type',]

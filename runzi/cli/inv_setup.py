@@ -4,7 +4,7 @@ from prompt_toolkit import prompt
 from pprint import PrettyPrinter
 import inquirer
 from inquirer.themes import GreenPassion
-from config.inversion_builder import Crustal, Subduction
+from config.inversion_builder import CrustalConfig, SubductionConfig
 from cli_helpers import pprint_color, NumberValidator
 
 def base_config():
@@ -28,7 +28,7 @@ def crustal_setup(*args):
     global global_config
     base_config()
 
-    global_config = Crustal(global_vars['task_title'], 
+    global_config = CrustalConfig(global_vars['task_title'], 
     global_vars['task_description'], 
     global_vars['worker_pool_size'], 
     global_vars['jvm_heap_max'],
@@ -46,7 +46,7 @@ def subduction_setup(*args):
     global global_config
     base_config()
 
-    global_config = Subduction(global_vars['task_title'], 
+    global_config = SubductionConfig(global_vars['task_title'], 
     global_vars['task_description'],
     global_vars['worker_pool_size'], 
     global_vars['jvm_heap_max'],
@@ -69,7 +69,7 @@ def show_values(*args):
 #     if choice: pprint_color(global_config.__getitem__(choice))
 def change_values(*args):
     global global_config
-    args = global_config.get_args()
+    args = global_config.get_task_args()
     question_list = [
         inquirer.List('arg',
             message="Choose a value to edit",
@@ -83,11 +83,15 @@ def change_values(*args):
         ),    
     ]
     answers = inquirer.prompt(question_list, theme=GreenPassion())
-
+    save_to_json = inquirer.confirm('Would you like to save this config to JSON?')
     arg = answers['arg']
     val = answers['value'].split(' ')
     global_config.__setitem__(arg, val)
    
+    def save_query():
+        if save_to_json == True:
+            global_config.to_json()
+            print(f'Saved your config to JSON as {global_config._file_id}_config.json')
 
     if answers['continue'] == True:
         print(f'You changed {arg} to: {val}')
@@ -96,10 +100,10 @@ def change_values(*args):
     if answers['continue'] == False:
         print("Here are your new values!")
         pprint_color(global_config.get_args())
-        save_to_json = inquirer.Confirm('save_to_json',
-            message='Would you like to save this config to JSON?',
-        )
-        if save_to_json == True:
-            global_config.to_json()
-            print(f'Saved your config to JSON as {global_config._file_id}_config.json')
+        save_query()
+    
+
+def save_to_json(*args):
+    global_config.to_json()
+    print(f'Saved your config to JSON as {global_config._file_id}_config.json')
 

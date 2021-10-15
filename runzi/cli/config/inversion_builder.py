@@ -1,6 +1,6 @@
 from .config_builder import Config
 
-class Inversion(Config):
+class InversionConfig(Config):
     def __init__(self, worker_pool_size, jvm_heap_max, java_threads,
     use_api, task_title, task_description, general_task_id, file_id, mock_mode) -> None:
         super().__init__(worker_pool_size, jvm_heap_max, java_threads,
@@ -22,7 +22,7 @@ class Inversion(Config):
         self._non_negativity_function = [], 
         self._perturbation_function = []
 
-class Subduction(Inversion):
+class SubductionConfig(InversionConfig):
     def __init__(self, worker_pool_size, jvm_heap_max, java_threads,
     use_api, task_title, task_description, general_task_id, file_id, mock_mode) -> None:
         super().__init__(worker_pool_size, jvm_heap_max, java_threads,
@@ -38,7 +38,7 @@ class Subduction(Inversion):
     #     None
     
     
-class Crustal(Inversion):
+class CrustalConfig(InversionConfig):
     def __init__(self, worker_pool_size, jvm_heap_max, java_threads,
     use_api, task_title, task_description, general_task_id, file_id, mock_mode) -> None:
         super().__init__(worker_pool_size, jvm_heap_max, java_threads,

@@ -106,5 +106,6 @@ class NumberValidator(Validator):
                 if not c.isdigit():
                     break
 
-            raise ValidationError(message='This input contains non-numeric characters',
+            raise ValidationError(message='This input must be an integer -- no non-numeric characters please',
                                   cursor_position=i)
+
