@@ -4,7 +4,7 @@ from runzi.cli.cli_helpers import pprint_color, to_json_format, from_json_format
 from pathlib import Path
 
 class Config:
-    def __init__(self, task_title, task_description, file_id, worker_pool_size = 2, jvm_heap_max = 12,
+    def __init__(self, task_title=None, task_description=None, file_id=None, worker_pool_size = 2, jvm_heap_max = 12,
     java_threads = 0, use_api = False, general_task_id = None, mock_mode = False) -> None:
 
         self._task_title = task_title
@@ -24,6 +24,10 @@ class Config:
         json_dict = to_json_format(self.__dict__)
         pprint_color(json_dict)
         jsonpath.write_text(json.dumps(json_dict, indent=4))
+
+    def from_json(self, config):
+        for k, v in config.items():
+            self.__setitem__(k, v)
 
     def get_task_args(self):
         non_args = ['_worker_pool_size', '_jvm_heap_max', '_java_threads',

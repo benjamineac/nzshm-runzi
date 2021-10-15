@@ -1,10 +1,10 @@
 from .config_builder import Config
 
 class InversionConfig(Config):
-    def __init__(self, worker_pool_size, jvm_heap_max, java_threads,
-    use_api, task_title, task_description, general_task_id, file_id, mock_mode) -> None:
-        super().__init__(worker_pool_size, jvm_heap_max, java_threads,
-        use_api, task_title, task_description, general_task_id, file_id, mock_mode)
+    def __init__(self, task_title, task_description, file_id, worker_pool_size, jvm_heap_max, java_threads,
+    use_api,  general_task_id, mock_mode) -> None:
+        super().__init__(task_title, task_description, file_id, worker_pool_size, jvm_heap_max, java_threads,
+        use_api,  general_task_id, mock_mode)
         self._rounds = [str(x) for x in range(1)]
         self._subtask_type = "INVERSION"
         self._completion_energies = [],
@@ -23,10 +23,10 @@ class InversionConfig(Config):
         self._perturbation_function = []
 
 class SubductionConfig(InversionConfig):
-    def __init__(self, worker_pool_size, jvm_heap_max, java_threads,
-    use_api, task_title, task_description, general_task_id, file_id, mock_mode) -> None:
-        super().__init__(worker_pool_size, jvm_heap_max, java_threads,
-        use_api, task_title, task_description, general_task_id, file_id, mock_mode)
+    def __init__(self, task_title, task_description, file_id, worker_pool_size, jvm_heap_max, java_threads,
+    use_api,  general_task_id, mock_mode) -> None:
+        super().__init__(task_title, task_description, file_id, worker_pool_size, jvm_heap_max, java_threads,
+        use_api,  general_task_id, mock_mode)
 
         self._model_type = "SUBDUCTION"
         self._mfd_uncertainty_weights =[],
@@ -37,12 +37,11 @@ class SubductionConfig(InversionConfig):
     # def run_subduction_inversion(self):
     #     None
     
-    
 class CrustalConfig(InversionConfig):
-    def __init__(self, worker_pool_size, jvm_heap_max, java_threads,
-    use_api, task_title, task_description, general_task_id, file_id, mock_mode) -> None:
-        super().__init__(worker_pool_size, jvm_heap_max, java_threads,
-        use_api, task_title, task_description, general_task_id, file_id, mock_mode)
+    def __init__(self, task_title, task_description, file_id, worker_pool_size, jvm_heap_max, java_threads,
+    use_api,  general_task_id, mock_mode) -> None:
+        super().__init__(task_title, task_description, file_id, worker_pool_size, jvm_heap_max, java_threads,
+        use_api,  general_task_id, mock_mode)
 
         self._model_type = "CRUSTAL"
         self._slip_rate_weights = [],
