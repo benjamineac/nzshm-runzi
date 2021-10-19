@@ -12,6 +12,15 @@ from pygments import highlight
 from pygments.lexers.python import PythonLexer
 from pygments.formatters import Terminal256Formatter
 from pprint import pformat
+from pyfiglet import Figlet
+from termcolor import cprint
+
+
+def landing_banner():
+    f = Figlet(font='univers')
+    cprint('Welcome to the...', 'green')
+    cprint(f.renderText('runzi CLI'), 'red')
+    cprint('try inputting help to get started...', 'green')
 
 def unique_id():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))

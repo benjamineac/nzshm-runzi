@@ -2,7 +2,7 @@ from runzi.cli.inv_setup import change_job_values, change_task_values
 from runzi.cli.load_json import load_crustal, load_subduction
 import sys
 import inv_setup
-from cli_helpers import MenuHandler
+from cli_helpers import MenuHandler, landing_banner
 from inv_setup import *
 from load_json import load_from_json
 
@@ -10,6 +10,8 @@ from load_json import load_from_json
 context = 'runziCLI'
 
 def main():
+
+    landing_banner()
 
     edit_menu = MenuHandler(context + '/inversions/edit', {
         'job': inv_setup.change_job_values,
