@@ -5,8 +5,10 @@ class InversionConfig(Config):
     use_api,  general_task_id, mock_mode) -> None:
         super().__init__(task_title, task_description, file_id, worker_pool_size, jvm_heap_max, java_threads,
         use_api,  general_task_id, mock_mode)
-        self._rounds = [str(x) for x in range(1)]
+
         self._subtask_type = "INVERSION"
+        self._rounds_range = 1
+        self._rounds = [str(x) for x in range(self._rounds_range)]
         self._completion_energies = [],
         self._max_inversion_times = [],
         self._mfd_transition_mags = [],

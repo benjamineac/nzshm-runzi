@@ -1,10 +1,10 @@
 from ast import Num
-import pprint
+from runzi.cli.cli_helpers import unique_id
 from prompt_toolkit import prompt 
-from pprint import PrettyPrinter
 import inquirer
 from config.inversion_builder import CrustalConfig, SubductionConfig
-from cli_helpers import pprint_color, NumberValidator
+from cli_helpers import NumberValidator, display
+from datetime import date
 
 def base_config():
     global global_vars
@@ -38,7 +38,7 @@ def crustal_setup(*args):
     global_vars['mock_mode'])
 
     print('Here\'s your crustal config')
-    pprint_color(global_config.get_all())
+    display(global_config)
 
 
 def subduction_setup(*args):
@@ -56,53 +56,73 @@ def subduction_setup(*args):
     global_vars['mock_mode'])
 
     print('Here\'s your subduction config')
-    pprint_color(global_config.get_all())
+    display(global_config)
 
 def show_values(*args):
     global global_config
-    pprint_color(global_config.get_all())   
+    try: 
+        global_config
+    except NameError: 
+        print("Load or create a config first!")
+    else:
+        display(global_config)   
 
-# def show_one(*args):
-#     global global_config
-#     choice = inquirer.List("Which value?", choices=global_config.get_args())
-#     if choice: pprint_color(global_config.__getitem__(choice))
-def change_values(*args):
+def change_general_values(*args): 
     global global_config
-    args = global_config.get_task_args()
-    question_list = [
-        inquirer.List('arg',
-            message="Choose a value to edit",
-            choices=args
-        ),
-        inquirer.Text('value',
-            message='What would you like the new value to be? If more than one put a space in between each value',
-        ),
-        inquirer.Confirm('continue',
-            message='Would you like to change another value?',
-        ),    
-    ]
-    answers = inquirer.prompt(question_list)
-    save_to_json = inquirer.confirm('Would you like to save this config to JSON?')
-    arg = answers['arg']
-    val = answers['value'].split(' ')
-    global_config.__setitem__(arg, val)
+    change_values(global_config.get_general_args)
+
+def change_job_values(*args): 
+    global global_config
+    change_values(global_config.get_job_args)
+
+def change_task_values(*args): 
+    global global_config
+    change_values(global_config.get_task_args)
+
+def change_values(value_callback):
+    global global_config
+    try:
+        global_config
+    except NameError:
+        print("Load or create a config first!")
+    else:
+        global_config._unique_id = unique_id()
+        arg_list = value_callback()
+        question_list = [
+            inquirer.List('arg',
+                message="Choose a value to edit",
+                choices=arg_list
+            ),
+            inquirer.Text('value',
+                message='What would you like the new value to be? If more than one put a space in between each value',
+            ),
+            inquirer.Confirm('continue',
+                message='Would you like to change another value?',
+            ),    
+        ]
+        answers = inquirer.prompt(question_list)
+        if answers['continue'] == False:
+            save_to_json = inquirer.confirm('Would you like to save this config to JSON?')
+        arg = answers['arg']
+        val = answers['value']
+        if value_callback == global_config.get_task_args:
+            val = val.split(' ')
+        global_config.__setitem__(arg, val)
    
     def save_query():
         if save_to_json == True:
             global_config.to_json()
-            print(f'Saved your config to JSON as {global_config._file_id}_config.json')
+            print(f'Saved your config to JSON as {date.today()}_{global_config._unique_id}_config.json')
 
     if answers['continue'] == True:
         print(f'You changed {arg} to: {val}')
-        change_values()
+        change_values(value_callback)
 
     if answers['continue'] == False:
         print("Here are your new values!")
-        pprint_color(global_config.get_task_args())
+        display(global_config)
         save_query()
-    
 
 def save_to_json(*args):
-    global_config.to_json()
-    print(f'Saved your config to JSON as {global_config._file_id}_config.json')
-
+        global_config.to_json()
+        print(f'Saved your config as {date.today()}_{global_config._unique_id}_config.json')

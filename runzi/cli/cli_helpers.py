@@ -1,4 +1,6 @@
 import sys
+import random
+import string
 from prompt_toolkit import prompt
 from prompt_toolkit.validation import Validator, ValidationError
 from prompt_toolkit.completion import WordCompleter
@@ -11,8 +13,19 @@ from pygments.lexers.python import PythonLexer
 from pygments.formatters import Terminal256Formatter
 from pprint import pformat
 
+def unique_id():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+
 def pprint_color(obj):
     print(highlight(pformat(obj), PythonLexer(), Terminal256Formatter()))
+
+def display(obj):
+    print("General Arguments:")
+    pprint_color(obj.get_general_args())
+    print("Task Arguments:")
+    pprint_color(obj.get_task_args())
+    print("Job Arguments:")
+    pprint_color(obj.get_job_args())
 
 class MenuHandler():
 

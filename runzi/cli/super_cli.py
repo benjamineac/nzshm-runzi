@@ -1,31 +1,45 @@
+from runzi.cli.inv_setup import change_job_values, change_task_values
+from runzi.cli.load_json import load_crustal, load_subduction
 import sys
 import inv_setup
 from cli_helpers import MenuHandler
-from inv_setup import crustal_setup, subduction_setup, save_to_json
+from inv_setup import *
 from load_json import load_from_json
 
 
-context = 'runZLI'
+context = 'runziCLI'
 
 def main():
 
-    value_menu = MenuHandler(context + '/values', {
-        # 'check1': inv_setup.show_one,
+    edit_menu = MenuHandler(context + '/inversions/edit', {
+        'job': inv_setup.change_job_values,
+        'task': inv_setup.change_task_values,
+        'general':inv_setup.change_general_values
+    })
+
+    crustal_menu = MenuHandler(context + '/inversions/crustal', {
+        'load': load_crustal,
+        'save': save_to_json,
         'show': inv_setup.show_values,
-        'edit': inv_setup.change_values
+        'edit': edit_menu.run,
+        'new': crustal_setup
+    })
+    
+    subduction_menu = MenuHandler(context + '/inversions/subduction', {
+        'load': load_subduction,
+        'save': save_to_json,
+        'show': inv_setup.show_values,
+        'edit': edit_menu.run,
+        'new': subduction_setup
     })
 
     inversions_menu = MenuHandler(context + '/inversions', {
-        'crustal': crustal_setup,
-        'subduction': subduction_setup,
+        'crustal': crustal_menu.run,
+        'subduction': subduction_menu.run,
     })
 
     main_menu = MenuHandler(context, {
-    'save': save_to_json,
-    'load': load_from_json,
-    'inversions': inversions_menu.run,
-    'values': value_menu.run,
-    'quit': quit
+        'inversions': inversions_menu.run,
     })
 
     main_menu.run()
