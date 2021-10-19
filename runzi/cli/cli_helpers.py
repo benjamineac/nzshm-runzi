@@ -18,7 +18,7 @@ from termcolor import cprint
 
 def landing_banner():
     f = Figlet(font='univers')
-    cprint('Welcome to the...', 'green')
+    cprint('Welcome to the...', 'red')
     cprint(f.renderText('runzi CLI'), 'red')
     cprint('try inputting help to get started...', 'green')
 

@@ -36,6 +36,8 @@ def run_subduction_inversion(config):
     MOCK_MODE = config._mock_mode
     file_id = config._file_id
     MODEL_TYPE = config._model_type
+    SUBTASK_TYPE = config._subtask_type
+
 
     headers={"x-api-key":API_KEY}
     toshi_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
@@ -56,7 +58,7 @@ def run_subduction_inversion(config):
             description=TASK_DESCRIPTION
             )\
             .set_argument_list(args_list)\
-            .set_subtask_type('INVERSION')\
+            .set_subtask_type(SUBTASK_TYPE)\
             .set_model_type(MODEL_TYPE)
 
         GENERAL_TASK_ID = toshi_api.general_task.create_task(gt_args)    

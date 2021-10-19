@@ -1,4 +1,5 @@
 import json
+from runzi.cli.subduction_inversion_runner import run_subduction_inversion
 from runzi.cli.cli_helpers import display, to_json_format, from_json_format, unique_id
 from pathlib import Path
 from datetime import date
@@ -7,7 +8,7 @@ from datetime import date
 
 class Config:
     def __init__(self, task_title=None, task_description=None, file_id=None, worker_pool_size = 2, jvm_heap_max = 12,
-    java_threads = 0, use_api = False, general_task_id = None, mock_mode = False) -> None:
+    java_threads = 0, use_api = False, general_task_id = None, mock_mode = False, rounds_range = 1) -> None:
 
         self._unique_id = unique_id()
         self._task_title = task_title
@@ -19,6 +20,7 @@ class Config:
         self._general_task_id = general_task_id
         self._file_id = file_id
         self._mock_mode = mock_mode
+        self._rounds_range = rounds_range
     
     def to_json(self):
         path = Path(__file__).resolve().parent / 'saved_configs' / self._subtask_type /self._model_type
@@ -26,6 +28,8 @@ class Config:
         path.mkdir(exist_ok=True)
         json_dict = to_json_format(self.__dict__)
         jsonpath.write_text(json.dumps(json_dict, indent=4))
+        print(f'Saved your config to JSON as {date.today()}_{self._unique_id}_config.json')
+
 
     def from_json(self, config):
         for k, v in config.items():
@@ -37,7 +41,7 @@ class Config:
                     '_java_threads',
                     '_use_api',
                     '_general_task_id',
-                    '_mock_mode' ]
+                    '_mock_mode']
         return {k:v for k, v in self.__dict__.items() if k in job_args}
 
     def get_task_args(self):
@@ -76,3 +80,6 @@ class Config:
 
     def __setitem__(self, key, value):
         return setattr(self, key, value)
+
+    def run_subduction(self):
+        run_subduction_inversion(self)
