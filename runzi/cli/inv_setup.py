@@ -57,7 +57,7 @@ def subduction_setup(*args):
     global_vars['use_api'], 
     global_vars['general_task_id'], 
     global_vars['mock_mode'],
-    global_vars['dorounds_range'])
+    global_vars['rounds_range'])
 
     print('Here\'s your subduction config')
     display(global_config)
