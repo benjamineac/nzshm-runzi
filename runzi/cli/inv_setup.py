@@ -83,6 +83,11 @@ def change_task_values(*args):
     global global_config
     change_values(global_config.get_task_args)
 
+def subduction_run(*args):
+    global_config.run_subduction()
+
+def crustal_run(*args):
+    global_config.run_crustal()
 
 def change_values(value_callback):
     global global_config
@@ -134,18 +139,9 @@ def change_values(value_callback):
             change_values(value_callback)
 
         if go_again == False:
-            answers = ['Save this config', 'Save as new config', 'Don\'t save']
             print('Here are your new values!')
             display(global_config)
-            save_query = inquirer.list_input('Would you like to save this config to JSON?', 
-            choices=answers)
-            if save_query == answers[0]:
-                global_config.to_json()
-            elif save_query == answers[1]:
-                global_config._unique_id = unique_id()
-                global_config.to_json()
-            else:
-                return
+            save_to_json()
 
 def save_to_json(*args):
             answers = ['Save this config', 'Save as new config', 'Don\'t save']
@@ -160,6 +156,8 @@ def save_to_json(*args):
             else:
                 return
 
-def subduction_run(*args):
-    global_config.run_subduction()
+
+
+
+
 

@@ -1,4 +1,5 @@
 import json
+from runzi.cli.crustal_inversion_runner import run_crustal_inversion
 from runzi.cli.subduction_inversion_runner import run_subduction_inversion
 from runzi.cli.cli_helpers import display, to_json_format, from_json_format, unique_id
 from pathlib import Path
@@ -101,3 +102,6 @@ class Config:
 
     def run_subduction(self):
         run_subduction_inversion(self)
+    
+    def run_crustal(self):
+        run_crustal_inversion(self)

@@ -1,21 +1,13 @@
-import json
 import os
 import pwd
-import itertools
-import stat
 import datetime as dt
-from dateutil import tz
-from dateutil.tz import tzutc
 from unittest import mock
-from pathlib import PurePath
 from subprocess import check_call
 from multiprocessing.dummy import Pool
 
 from runzi.automation.run_subduction_inversions import build_subduction_tasks
 from runzi.automation.scaling.toshi_api import ToshiApi, CreateGeneralTaskArgs
-from runzi.automation.scaling.opensha_task_factory import OpenshaTaskFactory
 from runzi.automation.scaling.file_utils import download_files, get_output_file_id, get_output_file_ids
-from runzi.automation.scaling import inversion_solution_builder_task
 
 # Set up your local config, from environment variables, with some sone defaults
 from runzi.automation.scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,

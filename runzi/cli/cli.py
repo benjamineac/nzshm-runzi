@@ -30,7 +30,8 @@ def main():
         'save': save_to_json,
         'show': show_values,
         'edit': crustal_edit_menu.run,
-        'new': crustal_setup
+        'new': crustal_setup,
+        'run': crustal_run
     })
     
     subduction_menu = MenuHandler(context + '/inversions/subduction', {
