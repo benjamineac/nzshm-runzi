@@ -83,6 +83,8 @@ def change_task_values(*args):
     global global_config
     change_values(global_config.get_task_args)
 
+
+
 def change_values(value_callback):
     global global_config
     try:
@@ -92,25 +94,21 @@ def change_values(value_callback):
     else:
         global_config._unique_id = unique_id()
         arg_list = value_callback()
-        question_list = [
-            inquirer.List('arg',
-                message="Choose a value to edit",
-                choices=arg_list
-            ),
-            inquirer.Text('value',
-                message=f'What would you like the new value to be? If you enter multiple values put spaces in between!',
-            ),
-            inquirer.Confirm('continue',
-                message='Would you like to change another value?',
-            ),    
-        ]
-        answers = inquirer.prompt(question_list)
+        arg_type_tips = ['List of values - If you enter multiple values put spaces in between!',
+        'Integer - Put a number!', 'Boolean - yes or no!', 'String - text would be good!']
 
-        if answers['continue'] == False:
-            save_to_json = inquirer.confirm('Would you like to save this config to JSON?')
+        arg = inquirer.list_input(message="Choose a value to edit", choices=arg_list)
 
-        arg = answers['arg']
-        val = answers['value']
+        if arg in ['_worker_pool_size', '_jvm_heap_max', '_java_threads', '_rounds_range']:
+            val = inquirer.text(message=f'What would you like the new value to be? {arg_type_tips[1]}')
+        elif arg in ['_mock_mode', '_use_api']:
+            val = inquirer.confirm(message=f'What would you like the new value to be? {arg_type_tips[2]}')
+        elif arg in ['_task_title', '_task_description', '_general_task_id', 'file_id']:
+            val = inquirer.text(message=f'What would you like the new value to be? {arg_type_tips[3]}')
+        else:
+            val = inquirer.text(message=f'What would you like the new value to be? {arg_type_tips[0]}')
+        
+        go_again = inquirer.confirm(message='Would you like to change another value?')
 
         if value_callback == global_config.get_task_args:
             val = val.split(' ')
@@ -124,21 +122,19 @@ def change_values(value_callback):
                 val = True
             else:
                 val = False
-        
+
         global_config.__setitem__(arg, val)
+        
+        if go_again == True:
+            print(f'You changed {arg} to: {val}')
+            change_values(value_callback)
 
-    def save_query():
-        if save_to_json == True:
-            global_config.to_json()
-
-    if answers['continue'] == True:
-        print(f'You changed {arg} to: {val}')
-        change_values(value_callback)
-
-    if answers['continue'] == False:
-        print("Here are your new values!")
-        display(global_config)
-        save_query()
+        if go_again == False:
+            print('Here are your new values!')
+            display(global_config)
+            save_query = inquirer.confirm('Would you like to save this config to JSON?')
+            if save_query == True:
+                global_config.to_json()
 
 def save_to_json(*args):
     global_config.to_json()
