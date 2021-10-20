@@ -98,7 +98,7 @@ def change_values(value_callback):
                 choices=arg_list
             ),
             inquirer.Text('value',
-                message=f'What would you like the new value to be? If you enter multiple values put spaces in between!',
+                message='What would you like the new value to be? If you enter multiple values put spaces in between!',
             ),
             inquirer.Confirm('continue',
                 message='Would you like to change another value?',
