@@ -13,7 +13,13 @@ def main():
 
     landing_banner()
 
-    edit_menu = MenuHandler(context + '/inversions/edit', {
+    crustal_edit_menu = MenuHandler(context + '/inversions/crustal/edit', {
+        'job': change_job_values,
+        'task': change_task_values,
+        'general': change_general_values
+    })
+
+    subduction_edit_menu = MenuHandler(context + '/inversions/subduction/edit', {
         'job': change_job_values,
         'task': change_task_values,
         'general': change_general_values
@@ -23,7 +29,7 @@ def main():
         'load': load_crustal,
         'save': save_to_json,
         'show': show_values,
-        'edit': edit_menu.run,
+        'edit': crustal_edit_menu.run,
         'new': crustal_setup
     })
     
@@ -31,7 +37,7 @@ def main():
         'load': load_subduction,
         'save': save_to_json,
         'show': show_values,
-        'edit': edit_menu.run,
+        'edit': subduction_edit_menu.run,
         'new': subduction_setup,
         'run': subduction_run
     })

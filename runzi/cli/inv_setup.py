@@ -91,10 +91,10 @@ def change_values(value_callback):
     except NameError:
         print("Load or create a config first!")
     else:
-        global_config._unique_id = unique_id()
+        # global_config._unique_id = unique_id()
         arg_list = value_callback()
         arg_list['Exit'] = ''
-        arg_type_tips = ['List of values - If you enter multiple values put spaces in between!',
+        arg_type_tips = ['List - If multiple values put spaces in between!',
         'Integer - Put a number!', 'Boolean - yes or no!', 'String - text would be good!']
 
         arg = inquirer.list_input(message="Choose a value to edit", choices=arg_list)
@@ -103,13 +103,13 @@ def change_values(value_callback):
             return
 
         if arg in ['_worker_pool_size', '_jvm_heap_max', '_java_threads', '_rounds_range']:
-            val = inquirer.text(message=f'What would you like the new value to be? {arg_type_tips[1]}')
+            val = inquirer.text(message=f'New value {arg_type_tips[1]}')
         elif arg in ['_mock_mode', '_use_api']:
-            val = inquirer.confirm(message=f'What would you like the new value to be? {arg_type_tips[2]}')
+            val = inquirer.confirm(message=f'New value {arg_type_tips[2]}')
         elif arg in ['_task_title', '_task_description', '_general_task_id', 'file_id']:
-            val = inquirer.text(message=f'What would you like the new value to be? {arg_type_tips[3]}')
+            val = inquirer.text(message=f'New value {arg_type_tips[3]}')
         else:
-            val = inquirer.text(message=f'What would you like the new value to be? {arg_type_tips[0]}')
+            val = inquirer.text(message=f'New value {arg_type_tips[0]}')
         
         go_again = inquirer.confirm(message='Would you like to change another value?')
 
@@ -134,14 +134,31 @@ def change_values(value_callback):
             change_values(value_callback)
 
         if go_again == False:
+            answers = ['Save this config', 'Save as new config', 'Don\'t save']
             print('Here are your new values!')
             display(global_config)
-            save_query = inquirer.confirm('Would you like to save this config to JSON?')
-            if save_query == True:
+            save_query = inquirer.list_input('Would you like to save this config to JSON?', 
+            choices=answers)
+            if save_query == answers[0]:
                 global_config.to_json()
+            elif save_query == answers[1]:
+                global_config._unique_id = unique_id()
+                global_config.to_json()
+            else:
+                return
 
 def save_to_json(*args):
-    global_config.to_json()
+            answers = ['Save this config', 'Save as new config', 'Don\'t save']
+            display(global_config)
+            save_query = inquirer.list_input('Would you like to save this config to JSON?', 
+            choices=answers)
+            if save_query == answers[0]:
+                global_config.to_json()
+            elif save_query == answers[1]:
+                global_config._unique_id = unique_id()
+                global_config.to_json()
+            else:
+                return
 
 def subduction_run(*args):
     global_config.run_subduction()

@@ -56,7 +56,8 @@ class Config:
                         '_model_type',
                         '_subtask_type',
                         '_unique_id',
-                        '_rounds']
+                        '_rounds',
+                        '_rounds_range']
         return {k:v for k, v in self.__dict__.items() if k not in non_task_args}
 
     def get_run_args(self):
@@ -82,7 +83,8 @@ class Config:
                         '_file_id',
                         '_model_type',
                         '_subtask_type',
-                        '_unique_id']
+                        '_unique_id',
+                        '_rounds_range']
         return {k:v for k, v in self.__dict__.items() if k in general_args}
     
     def get_keys(self):

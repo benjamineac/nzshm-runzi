@@ -1,6 +1,7 @@
 import sys
 import random
 import string
+import os
 from prompt_toolkit import prompt
 from prompt_toolkit.validation import Validator, ValidationError
 from prompt_toolkit.completion import WordCompleter
@@ -17,10 +18,13 @@ from termcolor import cprint
 
 
 def landing_banner():
+    api_env = os.getenv("NZSHM22_TOSHI_API_URL")[-12:-8].upper()
     f = Figlet(font='univers')
     cprint('Welcome to the...', 'red')
     cprint(f.renderText('runzi CLI'), 'red')
+    cprint(f'You are operating in the {api_env} environment', 'red')
     cprint('try inputting help to get started...', 'green')
+
 
 def unique_id():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
