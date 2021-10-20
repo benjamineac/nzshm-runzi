@@ -56,10 +56,25 @@ class Config:
                         '_model_type',
                         '_subtask_type',
                         '_unique_id',
-                        '_rounds',
-                        '_rounds_range']
-                        
+                        '_rounds']
         return {k:v for k, v in self.__dict__.items() if k not in non_task_args}
+
+    def get_run_args(self):
+        non_task_args = ['_worker_pool_size',
+                        '_jvm_heap_max',
+                        '_java_threads',
+                        '_use_api',
+                        '_general_task_id',
+                        '_mock_mode', 
+                        '_task_title',
+                        '_task_description',
+                        '_file_id',
+                        '_model_type',
+                        '_subtask_type',
+                        '_unique_id',
+                        '_rounds_range']
+
+        return {k[1:]:v for k, v in self.__dict__.items() if k not in non_task_args}
 
     def get_general_args(self):
         general_args = ['_task_title',
