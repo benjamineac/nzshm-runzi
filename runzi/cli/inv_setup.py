@@ -93,10 +93,14 @@ def change_values(value_callback):
     else:
         global_config._unique_id = unique_id()
         arg_list = value_callback()
+        arg_list['Exit'] = ''
         arg_type_tips = ['List of values - If you enter multiple values put spaces in between!',
         'Integer - Put a number!', 'Boolean - yes or no!', 'String - text would be good!']
 
         arg = inquirer.list_input(message="Choose a value to edit", choices=arg_list)
+        
+        if arg == "Exit":
+            return
 
         if arg in ['_worker_pool_size', '_jvm_heap_max', '_java_threads', '_rounds_range']:
             val = inquirer.text(message=f'What would you like the new value to be? {arg_type_tips[1]}')
@@ -108,6 +112,7 @@ def change_values(value_callback):
             val = inquirer.text(message=f'What would you like the new value to be? {arg_type_tips[0]}')
         
         go_again = inquirer.confirm(message='Would you like to change another value?')
+
 
         if value_callback == global_config.get_task_args:
             val = val.split(' ')
