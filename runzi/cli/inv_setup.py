@@ -84,7 +84,6 @@ def change_task_values(*args):
     change_values(global_config.get_task_args)
 
 
-
 def change_values(value_callback):
     global global_config
     try:

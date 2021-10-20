@@ -4,8 +4,6 @@ from runzi.cli.cli_helpers import display, to_json_format, from_json_format, uni
 from pathlib import Path
 from datetime import date
 
-
-
 class Config:
     def __init__(self, task_title=None, task_description=None, file_id=None, worker_pool_size = 2, jvm_heap_max = 12,
     java_threads = 0, use_api = False, general_task_id = None, mock_mode = False, rounds_range = 1) -> None:
