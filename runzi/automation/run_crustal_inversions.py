@@ -8,14 +8,14 @@ from multiprocessing.dummy import Pool
 
 import datetime as dt
 
-from scaling.toshi_api import ToshiApi, CreateGeneralTaskArgs
-from scaling.opensha_task_factory import OpenshaTaskFactory
-from scaling.file_utils import download_files, get_output_file_id, get_output_file_ids
+from .scaling.toshi_api import ToshiApi, CreateGeneralTaskArgs
+from .scaling.opensha_task_factory import OpenshaTaskFactory
+from .scaling.file_utils import download_files, get_output_file_id, get_output_file_ids
 
-import scaling.inversion_solution_builder_task
+from .scaling import inversion_solution_builder_task
 
 # Set up your local config, from environment variables, with some sone defaults
-from scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
+from .scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
     JVM_HEAP_MAX, JVM_HEAP_START, USE_API, JAVA_THREADS,
     API_KEY, API_URL, S3_URL, CLUSTER_MODE)
 
@@ -25,7 +25,7 @@ def build_crustal_tasks(general_task_id, rupture_sets, args):
 
     # java_threads = int(args['threads_per_selector']) * int(args['averaging_threads'])
 
-    task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, scaling.inversion_solution_builder_task,
+    task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, inversion_solution_builder_task,
         initial_gateway_port=INITIAL_GATEWAY_PORT,
         jre_path=OPENSHA_JRE, app_jar_path=FATJAR,
         task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START,
