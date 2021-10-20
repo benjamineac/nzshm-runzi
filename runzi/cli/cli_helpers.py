@@ -25,6 +25,11 @@ def landing_banner():
     cprint(f'You are operating in the {api_env} environment', 'red')
     cprint('try inputting help to get started...', 'green')
 
+def to_json_format(config):
+    return {k[1:] : v for k, v in config.items()}
+
+def from_json_format(config):
+    return {'_' + k : v for k, v in config.items()}
 
 def unique_id():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
@@ -33,6 +38,7 @@ def pprint_color(obj):
     print(highlight(pformat(obj), PythonLexer(), Terminal256Formatter()))
 
 def display(obj):
+    # obj = to_json_format(obj)
     print("General Arguments:")
     pprint_color(obj.get_general_args())
     print("Task Arguments:")
@@ -136,9 +142,3 @@ class NumberValidator(Validator):
             raise ValidationError(message='This input must be an integer -- no non-numeric characters please',
                                   cursor_position=i)
 
-
-def to_json_format(config):
-    return {k[1:] : v for k, v in config.items()}
-
-def from_json_format(config):
-    return {'_' + k : v for k, v in config.items()}

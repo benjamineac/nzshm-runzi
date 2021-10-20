@@ -18,7 +18,7 @@ class InversionConfig(Config):
         self._slip_rate_normalized_weights = []
         self._slip_rate_unnormalized_weights = []             
         self._selection_interval_secs = []
-        self._threads_per_selector = []
+        self._threads_per_selectors = []
         self._averaging_threads = []
         self._averaging_interval_secs = []
         self._non_negativity_function = [] 
