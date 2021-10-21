@@ -1,4 +1,5 @@
 import json
+import os
 from runzi.cli.crustal_inversion_runner import run_crustal_inversion
 from runzi.cli.subduction_inversion_runner import run_subduction_inversion
 from runzi.cli.cli_helpers import display, to_json_format, from_json_format, unique_id
@@ -21,14 +22,20 @@ class Config:
         self._mock_mode = mock_mode
         self._rounds_range = rounds_range
     
-    def to_json(self):
-        formatted_date = datetime.strftime(datetime.now(), '%m-%d-%y-%H:%M')
+    def to_json(self, overwrite):
         path = Path(__file__).resolve().parent / 'saved_configs' / self._subtask_type /self._model_type
-        jsonpath = path / f'{formatted_date}_{self._unique_id}_config.json'
-        path.mkdir(exist_ok=True)
+        formatted_date = datetime.strftime(datetime.now(), '%m-%d-%y-%H:%M')
         json_dict = to_json_format(self.__dict__)
+        if overwrite == True:
+            for file in os.listdir(path):
+                if self._unique_id in file:
+                    jsonpath = path / file
+                    print(f'Saved your config to JSON as {file}') 
+        elif overwrite == False:
+            jsonpath = path / f'{formatted_date}_{self._unique_id}_config.json'
+            path.mkdir(exist_ok=True)
+            print(f'Saved your config to JSON as {formatted_date}_{self._unique_id}_config.json')
         jsonpath.write_text(json.dumps(json_dict, indent=2))
-        print(f'Saved your config to JSON as {formatted_date}_{self._unique_id}_config.json')
 
 
     def from_json(self, config):

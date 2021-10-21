@@ -149,9 +149,9 @@ def save_to_json(*args):
             save_query = inquirer.list_input('Would you like to save this config to JSON?', 
             choices=answers)
             if save_query == answers[0]:
-                global_config.to_json()
+                global_config.to_json(True)
             elif save_query == answers[1]:
-                global_config._unique_id = unique_id()
+                global_config._unique_id = unique_id(False)
                 global_config.to_json()
             else:
                 return
