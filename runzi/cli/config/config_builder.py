@@ -23,19 +23,22 @@ class Config:
         self._rounds_range = rounds_range
     
     def to_json(self, overwrite):
-        path = Path(__file__).resolve().parent / 'saved_configs' / self._subtask_type /self._model_type
-        formatted_date = datetime.strftime(datetime.now(), '%m-%d-%y-%H:%M')
+
         json_dict = to_json_format(self.__dict__)
+        # formatted_json = json_dict
+        path = Path(__file__).resolve().parent / 'saved_configs' / self._subtask_type /self._model_type
+        formatted_date = datetime.strftime(datetime.now(), '%m-%d-%y-%H-%M')
         if overwrite == True:
             for file in os.listdir(path):
                 if self._unique_id in file:
                     jsonpath = path / file
-                    print(f'Saved your config to JSON as {file}') 
+                    print(f'Saved your config to JSON as {file}')
+                    jsonpath.write_text(json.dumps(json_dict, indent=2))
         elif overwrite == False:
             jsonpath = path / f'{formatted_date}_{self._unique_id}_config.json'
             path.mkdir(exist_ok=True)
             print(f'Saved your config to JSON as {formatted_date}_{self._unique_id}_config.json')
-        jsonpath.write_text(json.dumps(json_dict, indent=2))
+            jsonpath.write_text(json.dumps(json_dict, indent=2))
 
 
     def from_json(self, config):
@@ -112,3 +115,4 @@ class Config:
     
     def run_crustal(self):
         run_crustal_inversion(self)
+

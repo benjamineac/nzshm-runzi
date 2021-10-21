@@ -161,8 +161,8 @@ def save_to_json(*args):
             if save_query == answers[0]:
                 global_config.to_json(True)
             elif save_query == answers[1]:
-                global_config._unique_id = unique_id(False)
-                global_config.to_json()
+                global_config._unique_id = unique_id()
+                global_config.to_json(False)
             else:
                 return
 

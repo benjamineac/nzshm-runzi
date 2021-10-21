@@ -26,6 +26,7 @@ def landing_banner():
     cprint('try inputting help to get started...', 'green')
 
 def to_json_format(config):
+    
     return {k[1:] : v for k, v in config.items()}
 
 def from_json_format(config):
