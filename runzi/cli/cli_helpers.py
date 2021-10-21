@@ -38,13 +38,15 @@ def pprint_color(obj):
     print(highlight(pformat(obj), PythonLexer(), Terminal256Formatter()))
 
 def display(obj):
-    # obj = to_json_format(obj)
     print("General Arguments:")
-    pprint_color(obj.get_general_args())
+    general_args = {k[1:] : v for k, v in obj.get_general_args().items()}
+    pprint_color(general_args)
     print("Task Arguments:")
-    pprint_color(obj.get_task_args())
+    task_args = {k[1:] : v for k, v in obj.get_task_args().items()}
+    pprint_color(task_args)
     print("Job Arguments:")
-    pprint_color(obj.get_job_args())
+    job_args = {k[1:] : v for k, v in obj.get_job_args().items()}
+    pprint_color(job_args)
 
 class MenuHandler():
 
