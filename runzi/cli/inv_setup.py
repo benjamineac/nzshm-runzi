@@ -73,15 +73,30 @@ def show_values(*args):
 
 def change_general_values(*args): 
     global global_config
-    change_values(global_config.get_general_args)
+    try:
+        global_config
+    except NameError:
+        print("Load or create a config first!")
+    else:
+        change_values(global_config.get_general_args)
 
 def change_job_values(*args): 
     global global_config
-    change_values(global_config.get_job_args)
+    try:
+        global_config
+    except NameError:
+        print("Load or create a config first!")
+    else:
+        change_values(global_config.get_job_args)
 
 def change_task_values(*args): 
     global global_config
-    change_values(global_config.get_task_args)
+    try:
+        global_config
+    except NameError:
+        print("Load or create a config first!")
+    else:
+        change_values(global_config.get_task_args)
 
 def subduction_run(*args):
     global_config.run_subduction()
@@ -90,58 +105,53 @@ def crustal_run(*args):
     global_config.run_crustal()
 
 def change_values(value_callback):
-    global global_config
-    try:
-        global_config
-    except NameError:
-        print("Load or create a config first!")
+
+    # global_config._unique_id = unique_id()
+    arg_list = value_callback()
+    arg_list['Exit'] = ''
+    arg_type_tips = ['List - If multiple values put spaces in between!',
+    'Integer - Put a number!', 'Boolean - yes or no!', 'String - text would be good!']
+
+    arg = inquirer.list_input(message="Choose a value to edit", choices=arg_list)
+    
+    if arg == "Exit":
+        return
+
+    if arg in ['_worker_pool_size', '_jvm_heap_max', '_java_threads', '_rounds_range']:
+        val = inquirer.text(message=f'New value {arg_type_tips[1]}')
+    elif arg in ['_mock_mode', '_use_api']:
+        val = inquirer.confirm(message=f'New value {arg_type_tips[2]}')
+    elif arg in ['_task_title', '_task_description', '_general_task_id', 'file_id']:
+        val = inquirer.text(message=f'New value {arg_type_tips[3]}')
     else:
-        # global_config._unique_id = unique_id()
-        arg_list = value_callback()
-        arg_list['Exit'] = ''
-        arg_type_tips = ['List - If multiple values put spaces in between!',
-        'Integer - Put a number!', 'Boolean - yes or no!', 'String - text would be good!']
+        val = inquirer.text(message=f'New value {arg_type_tips[0]}')
+    
+    go_again = inquirer.confirm(message='Would you like to change another value?')
 
-        arg = inquirer.list_input(message="Choose a value to edit", choices=arg_list)
-        
-        if arg == "Exit":
-            return
 
-        if arg in ['_worker_pool_size', '_jvm_heap_max', '_java_threads', '_rounds_range']:
-            val = inquirer.text(message=f'New value {arg_type_tips[1]}')
-        elif arg in ['_mock_mode', '_use_api']:
-            val = inquirer.confirm(message=f'New value {arg_type_tips[2]}')
-        elif arg in ['_task_title', '_task_description', '_general_task_id', 'file_id']:
-            val = inquirer.text(message=f'New value {arg_type_tips[3]}')
+    if value_callback == global_config.get_task_args:
+        val = val.split(' ')
+    if arg in ['_worker_pool_size', '_jvm_heap_max', '_java_threads', '_rounds_range']:
+        if val == '':
+            val = 0
+        val = int(val)
+
+    if arg in ['_mock_mode', '_use_api']:
+        if val in ['yes', 'y', 'true', 'True', '1', 'Yes']:
+            val = True
         else:
-            val = inquirer.text(message=f'New value {arg_type_tips[0]}')
-        
-        go_again = inquirer.confirm(message='Would you like to change another value?')
+            val = False
 
+    global_config.__setitem__(arg, val)
+    
+    if go_again == True:
+        print(f'You changed {arg} to: {val}')
+        change_values(value_callback)
 
-        if value_callback == global_config.get_task_args:
-            val = val.split(' ')
-        if arg in ['_worker_pool_size', '_jvm_heap_max', '_java_threads', '_rounds_range']:
-            if val == '':
-                val = 0
-            val = int(val)
-
-        if arg in ['_mock_mode', '_use_api']:
-            if val in ['yes', 'y', 'true', 'True', '1', 'Yes']:
-                val = True
-            else:
-                val = False
-
-        global_config.__setitem__(arg, val)
-        
-        if go_again == True:
-            print(f'You changed {arg} to: {val}')
-            change_values(value_callback)
-
-        if go_again == False:
-            print('Here are your new values!')
-            display(global_config)
-            save_to_json()
+    if go_again == False:
+        print('Here are your new values!')
+        display(global_config)
+        save_to_json()
 
 def save_to_json(*args):
             answers = ['Save this config', 'Save as new config', 'Don\'t save']
