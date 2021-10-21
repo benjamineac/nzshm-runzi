@@ -27,7 +27,7 @@ class Config:
         jsonpath = path / f'{formatted_date}_{self._unique_id}_config.json'
         path.mkdir(exist_ok=True)
         json_dict = to_json_format(self.__dict__)
-        jsonpath.write_text(json.dumps(json_dict, indent=4))
+        jsonpath.write_text(json.dumps(json_dict, indent=2))
         print(f'Saved your config to JSON as {formatted_date}_{self._unique_id}_config.json')
 
 

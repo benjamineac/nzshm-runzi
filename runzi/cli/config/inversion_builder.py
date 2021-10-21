@@ -21,8 +21,10 @@ class InversionConfig(Config):
         self._threads_per_selectors = []
         self._averaging_threads = []
         self._averaging_interval_secs = []
-        self._non_negativity_function = [] 
-        self._perturbation_function = []
+        self._non_negativity_functions = [] 
+        self._perturbation_functions = []
+        self._scaling_relationships = []
+        self._scaling_recalc_mags = []
 
 class SubductionConfig(InversionConfig):
     def __init__(self, task_title, task_description, file_id, worker_pool_size, jvm_heap_max, java_threads,
