@@ -6,3 +6,8 @@ pytz
 git+https://github.com/GNS-Science/nshm-toshi-client#egg=nshm_toshi_client
 numpy
 matplotlib
+prompt-toolkit==3.0.20
+termcolor==1.1.0
+inquirer==2.7.0
+Pygments==2.10.0
+pyfiglet==0.8.post1
