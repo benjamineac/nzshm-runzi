@@ -40,7 +40,7 @@ def to_json_format(config):
     return formatted_args
 
 def from_json_format(config):
-    flat_dict = config['job_args'] | config['general_args'] |config['task_args']
+    flat_dict = {**config['job_args'], **config['general_args'], **config['task_args']}
     return {'_' + k : v for k, v in flat_dict.items()}
 
 def unique_id():
