@@ -26,11 +26,22 @@ def landing_banner():
     cprint('try inputting help to get started...', 'green')
 
 def to_json_format(config):
-    
-    return {k[1:] : v for k, v in config.items()}
+    cleaned_args = {k[1:] : v for k, v in config.items()}
+    job_args = ['worker_pool_size', 'jvm_heap_max', 'java_threads', 'use_api', 'general_task_id', 'mock_mode']
+    general_args = ['task_title', 'task_description', 'file_id', 'model_type', 'subtask_type', 'unique_id', 'rounds_range']
+    formatted_args = {"job_args": {}, "general_args": {}, "task_args": {}}
+    for arg in cleaned_args:
+        if arg in job_args:
+            formatted_args["job_args"][arg] = cleaned_args[arg]
+        elif arg in general_args:
+            formatted_args["general_args"][arg] = cleaned_args[arg]
+        elif arg not in job_args or general_args:
+            formatted_args["task_args"][arg] = cleaned_args[arg]
+    return formatted_args
 
 def from_json_format(config):
-    return {'_' + k : v for k, v in config.items()}
+    flat_dict = config['job_args'] | config['general_args'] |config['task_args']
+    return {'_' + k : v for k, v in flat_dict.items()}
 
 def unique_id():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
