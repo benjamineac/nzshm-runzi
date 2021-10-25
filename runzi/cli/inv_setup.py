@@ -105,10 +105,9 @@ def crustal_run(*args):
     global_config.run_crustal()
 
 def change_values(value_callback):
-
-    # global_config._unique_id = unique_id()
     arg_list = value_callback()
-    arg_list['Exit'] = ''
+    arg_list = [k[1:] for k, _ in arg_list.items()]
+    arg_list.append('Exit')
     arg_type_tips = ['List - If multiple values put spaces in between!',
     'Integer - Put a number!', 'Boolean - yes or no!', 'String - text would be good!']
 
@@ -117,11 +116,11 @@ def change_values(value_callback):
     if arg == "Exit":
         return
 
-    if arg in ['_worker_pool_size', '_jvm_heap_max', '_java_threads', '_rounds_range']:
+    if arg in ['worker_pool_size', 'jvm_heap_max', 'java_threads', 'rounds_range']:
         val = inquirer.text(message=f'New value {arg_type_tips[1]}')
-    elif arg in ['_mock_mode', '_use_api']:
+    elif arg in ['mock_mode', 'use_api']:
         val = inquirer.confirm(message=f'New value {arg_type_tips[2]}')
-    elif arg in ['_task_title', '_task_description', '_general_task_id', 'file_id']:
+    elif arg in ['task_title', 'task_description', 'general_task_id', 'file_id']:
         val = inquirer.text(message=f'New value {arg_type_tips[3]}')
     else:
         val = inquirer.text(message=f'New value {arg_type_tips[0]}')
@@ -131,26 +130,25 @@ def change_values(value_callback):
 
     if value_callback == global_config.get_task_args:
         val = val.split(' ')
-    if arg in ['_worker_pool_size', '_jvm_heap_max', '_java_threads', '_rounds_range']:
+
+    if arg in ['worker_pool_size', 'jvm_heap_max', 'java_threads', 'rounds_range']:
         if val == '':
             val = 0
         val = int(val)
 
-    if arg in ['_mock_mode', '_use_api']:
+    if arg in ['mock_mode', 'use_api']:
         if val in ['yes', 'y', 'true', 'True', '1', 'Yes']:
             val = True
         else:
             val = False
 
-    global_config.__setitem__(arg, val)
+    global_config.__setitem__("_" + arg, val)
     
     if go_again == True:
         print(f'You changed {arg} to: {val}')
         change_values(value_callback)
 
     if go_again == False:
-        print('Here are your new values!')
-        display(global_config)
         save_to_json()
 
 def save_to_json(*args):
