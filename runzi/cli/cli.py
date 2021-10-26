@@ -1,4 +1,4 @@
-from runzi.cli.inv_setup import change_job_values, change_task_values
+from runzi.cli.inv_setup import change_job_values, change_task_values, add_task_arg
 from runzi.cli.load_json import load_crustal, load_subduction
 import sys
 import inv_setup
@@ -16,13 +16,15 @@ def main():
     crustal_edit_menu = MenuHandler(context + '/inversions/crustal/edit', {
         'job': change_job_values,
         'task': change_task_values,
-        'general': change_general_values
+        'general': change_general_values,
+        'add': add_task_arg,
     })
 
     subduction_edit_menu = MenuHandler(context + '/inversions/subduction/edit', {
         'job': change_job_values,
         'task': change_task_values,
-        'general': change_general_values
+        'general': change_general_values,
+        'add': add_task_arg,
     })
 
     crustal_menu = MenuHandler(context + '/inversions/crustal', {

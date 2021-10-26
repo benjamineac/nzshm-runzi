@@ -1,4 +1,6 @@
 from ast import Num
+
+from termcolor import cprint
 from runzi.cli.cli_helpers import unique_id
 from prompt_toolkit import prompt 
 import inquirer
@@ -22,7 +24,7 @@ def base_config():
     global_vars['general_task_id'] = prompt('Enter the general task id - string: ')
     global_vars['file_id'] = prompt('Enter the file id - string: ')
     global_vars['mock_mode'] = prompt('Would you like to use mock mode? - yes or no: ') in ['yes', 'y'] or False
-    global_vars['rounds_range'] = int(prompt('How many rounds would you like to run? - int: ', 
+    global_vars['rounds'] = int(prompt('How many rounds would you like to run? - int: ', 
                 validator=NumberValidator(), validate_while_typing=True))
 
 def crustal_setup(*args):
@@ -38,7 +40,7 @@ def crustal_setup(*args):
     global_vars['use_api'], 
     global_vars['general_task_id'], 
     global_vars['mock_mode'],
-    global_vars['rounds_range'])
+    global_vars['rounds'])
 
     print('Here\'s your crustal config')
     display(global_config)
@@ -57,7 +59,7 @@ def subduction_setup(*args):
     global_vars['use_api'], 
     global_vars['general_task_id'], 
     global_vars['mock_mode'],
-    global_vars['rounds_range'])
+    global_vars['rounds'])
 
     print('Here\'s your subduction config')
     display(global_config)
@@ -108,7 +110,7 @@ def change_values(value_callback):
     arg_list = value_callback()
     arg_list = [k[1:] for k, _ in arg_list.items()]
     arg_list.append('Exit')
-    arg_type_tips = ['List - If multiple values put spaces in between!',
+    arg_type_tips = ['List - Separate values with commas!',
     'Integer - Put a number!', 'Boolean - yes or no!', 'String - text would be good!']
 
     arg = inquirer.list_input(message="Choose a value to edit", choices=arg_list)
@@ -129,7 +131,7 @@ def change_values(value_callback):
 
 
     if value_callback == global_config.get_task_args:
-        val = val.split(' ')
+        val = [x.strip() for x in val.split(',')]
 
     if arg in ['worker_pool_size', 'jvm_heap_max', 'java_threads', 'rounds_range']:
         if val == '':
@@ -141,6 +143,9 @@ def change_values(value_callback):
             val = True
         else:
             val = False
+    
+    if arg == 'rounds':
+        val = [str(x) for x in range(int(val))]
 
     global_config.__setitem__("_" + arg, val)
     
@@ -152,19 +157,32 @@ def change_values(value_callback):
         save_to_json()
 
 def save_to_json(*args):
-            answers = ['Save this config', 'Save as new config', 'Don\'t save']
-            display(global_config)
-            save_query = inquirer.list_input('Would you like to save this config to JSON?', 
-            choices=answers)
-            if save_query == answers[0]:
-                global_config.to_json(True)
-            elif save_query == answers[1]:
-                global_config._unique_id = unique_id()
-                global_config.to_json(False)
-            else:
-                return
+    answers = ['Save this config', 'Save as new config', 'Don\'t save']
+    display(global_config)
+    save_query = inquirer.list_input('Would you like to save this config to JSON?', 
+    choices=answers)
+    if save_query == answers[0]:
+        global_config.to_json(True)
+    elif save_query == answers[1]:
+        global_config._unique_id = unique_id()
+        global_config.to_json(False)
+    else:
+        return
 
-
+def add_task_arg(*args):
+    key = inquirer.text('Argument key: ')
+    data_type = inquirer.list_input('Argument data type: ', choices=['Integer', 'List', 'String'])
+    value = inquirer.text('Argument value: ')
+    if data_type == 'Integer':
+        value = int(value)
+    if data_type == 'List (put a comma between each value)':
+        value = value.split(',')
+    confirm = inquirer.confirm("Are you sure you would like to add this argument?")
+    if confirm == True: 
+        global_config.__setitem__("_" + key, value)
+        cprint(f'New task argument - {key}: {value}')
+    else: 
+        return
 
 
 

@@ -8,7 +8,7 @@ class InversionConfig(Config):
         use_api,  general_task_id, mock_mode, rounds_range)
 
         self._subtask_type = "INVERSION"
-        self._rounds = [str(x) for x in range(self._rounds_range)]
+        self._rounds = [str(x) for x in range(1)]
         self._completion_energies = []
         self._max_inversion_times = []
         self._mfd_transition_mags = []

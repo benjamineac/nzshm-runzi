@@ -20,9 +20,11 @@ from termcolor import cprint
 def landing_banner():
     api_env = os.getenv("NZSHM22_TOSHI_API_URL")[-12:-8].upper()
     f = Figlet(font='univers')
+    b = Figlet(font='big')
     cprint('Welcome to the...', 'red')
-    cprint(f.renderText('runzi CLI'), 'red')
-    cprint(f'You are operating in the {api_env} environment', 'red')
+    cprint(f.renderText('runziCLI'), 'red')
+    cprint('You are operating in the...\n', 'cyan')
+    cprint(b.renderText(api_env) +  'environment', 'cyan')
     cprint('try inputting help to get started...', 'green')
 
 def to_json_format(config):

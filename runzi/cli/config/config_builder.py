@@ -8,7 +8,7 @@ from datetime import datetime
 
 class Config:
     def __init__(self, task_title=None, task_description=None, file_id=None, worker_pool_size = 2, jvm_heap_max = 12,
-    java_threads = 0, use_api = False, general_task_id = None, mock_mode = False, rounds_range = 1) -> None:
+    java_threads = 0, use_api = False, general_task_id = None, mock_mode = False, rounds = 1) -> None:
 
         self._unique_id = unique_id()
         self._task_title = task_title
@@ -20,26 +20,32 @@ class Config:
         self._general_task_id = general_task_id
         self._file_id = file_id
         self._mock_mode = mock_mode
-        self._rounds_range = rounds_range
+        self._rounds = rounds
     
     def to_json(self, overwrite):
 
         json_dict = to_json_format(self.__dict__)
         # formatted_json = json_dict
         path = Path(__file__).resolve().parent / 'saved_configs' / self._subtask_type /self._model_type
-        formatted_date = datetime.strftime(datetime.now(), '%m-%d-%y-%H-%M')
         if overwrite == True:
             for file in os.listdir(path):
                 if self._unique_id in file:
                     jsonpath = path / file
                     print(f'Saved your config to JSON as {file}')
                     jsonpath.write_text(json.dumps(json_dict, indent=2))
+                else:
+                    self.save_as_new()
         elif overwrite == False:
-            jsonpath = path / f'{formatted_date}_{self._unique_id}_config.json'
-            path.mkdir(exist_ok=True)
-            print(f'Saved your config to JSON as {formatted_date}_{self._unique_id}_config.json')
-            jsonpath.write_text(json.dumps(json_dict, indent=2))
+            self.save_as_new()
 
+    def save_as_new(self):
+        json_dict = to_json_format(self.__dict__)
+        path = Path(__file__).resolve().parent / 'saved_configs' / self._subtask_type /self._model_type
+        formatted_date = datetime.strftime(datetime.now(), '%y-%m-%d-%H%M')
+        jsonpath = path / f'{formatted_date}_{self._unique_id}_config.json'
+        path.mkdir(exist_ok=True)
+        print(f'Saved your config to JSON as {formatted_date}_{self._unique_id}_config.json')
+        jsonpath.write_text(json.dumps(json_dict, indent=2))
 
     def from_json(self, config):
         for k, v in config.items():
@@ -66,9 +72,7 @@ class Config:
                         '_file_id',
                         '_model_type',
                         '_subtask_type',
-                        '_unique_id',
-                        '_rounds',
-                        '_rounds_range']
+                        '_unique_id']
         return {k:v for k, v in self.__dict__.items() if k not in non_task_args}
 
     def get_run_args(self):
@@ -83,8 +87,7 @@ class Config:
                         '_file_id',
                         '_model_type',
                         '_subtask_type',
-                        '_unique_id',
-                        '_rounds_range']
+                        '_unique_id']
 
         return {k[1:]:v for k, v in self.__dict__.items() if k not in non_task_args}
 
@@ -94,8 +97,7 @@ class Config:
                         '_file_id',
                         '_model_type',
                         '_subtask_type',
-                        '_unique_id',
-                        '_rounds_range']
+                        '_unique_id']
         return {k:v for k, v in self.__dict__.items() if k in general_args}
     
     def get_keys(self):
