@@ -184,6 +184,23 @@ def add_task_arg(*args):
     else: 
         return
 
+def delete_task_arg(*args):
+    arg_list = global_config.get_task_args()
+    arg_list = [k[1:] for k, _ in arg_list.items()]
+    arg_list.append("Exit")
+    deleted_arg = inquirer.list_input('Argument to delete: ', choices=arg_list)
+    if deleted_arg == "Exit":
+        return
+    else:
+        try:
+            confirm = inquirer.confirm(f"Are you sure you would like to delete {deleted_arg}?")
+            if confirm == True:
+                global_config.__deleteitem__('_' + deleted_arg)
+            else:
+                return
+        except AttributeError:
+            print(f'No such argument as {deleted_arg}!')
+
 
 
 

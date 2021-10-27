@@ -111,6 +111,9 @@ class Config:
 
     def __setitem__(self, key, value):
         return setattr(self, key, value)
+    
+    def __deleteitem__(self, key):
+        delattr(self, key)
 
     def run_subduction(self):
         run_subduction_inversion(self)
