@@ -1,7 +1,9 @@
 # created by virtualenv automatically
-*.pyc
+**.py[cod]
 bin/**
 lib/**
 pyvenv.cfg
 share/**
 **.egg-info/**
+runzi/cli/config/saved_configs/**
+runzi/cli/**/__pycache__/**
