@@ -31,3 +31,7 @@ FATJAR = os.getenv('NZSHM22_FATJAR', None) or str(PurePath(OPENSHA_ROOT, "nzshm-
 WORK_PATH = os.getenv('NZSHM22_SCRIPT_WORK_PATH', PurePath(os.getcwd(), "tmp"))
 
 CLUSTER_MODE = os.getenv('NZSHM22_SCRIPT_CLUSTER_MODE', False)
+
+BUILD_PLOTS = True
+REPORT_LEVEL = 'DEFAULT'
+MOCK_MODE = True

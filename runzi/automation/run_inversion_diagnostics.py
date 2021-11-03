@@ -18,27 +18,28 @@ from dateutil.tz import tzutc
 
 #from nshm_toshi_client.general_task import GeneralTask
 #from nshm_toshi_client.toshi_file import ToshiFile
-from scaling.toshi_api import ToshiApi
+from .scaling.toshi_api import ToshiApi
 
-from scaling.opensha_task_factory import OpenshaTaskFactory
-from scaling.file_utils import download_files, get_output_file_ids
+from .scaling.opensha_task_factory import OpenshaTaskFactory
+from .scaling.file_utils import download_files, get_output_file_ids
 
 
-import scaling.inversion_diags_report_task
+from .scaling import inversion_diags_report_task
 # from scaling.toshi_api import ToshiApi
 
 # Set up your local config, from environment variables, with some sone defaults
-from scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
+from .scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
     JVM_HEAP_MAX, JVM_HEAP_START, USE_API, JAVA_THREADS,
-    API_KEY, API_URL, S3_URL, CLUSTER_MODE)
-
+    API_KEY, API_URL, S3_URL, CLUSTER_MODE, BUILD_PLOTS, REPORT_LEVEL)
 
 def run_tasks(general_task_id, solutions):
     task_count = 0
-    task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, scaling.inversion_diags_report_task,
+    task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, inversion_diags_report_task,
         jre_path=OPENSHA_JRE, app_jar_path=FATJAR,
         task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START,
         pbs_script=CLUSTER_MODE)
+    
+    print(solutions)
 
     for (sid, rupture_set_info) in solutions.items():
 
@@ -47,8 +48,6 @@ def run_tasks(general_task_id, solutions):
         #get FM name
         fault_model = rupture_set_info['info']['fault_model']
 
-        # idx0 = rupture_set_info['filepath'].index("-CFM")
-        # idx1 = rupture_set_info['filepath'].index("-", idx0 +1)
         #rupture_set_info['info'] has detail of the Inversion task
         task_arguments = dict(
             file_id = str(rupture_set_info['id']),
