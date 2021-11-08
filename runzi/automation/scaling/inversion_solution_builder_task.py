@@ -6,6 +6,7 @@ import uuid
 from pathlib import PurePath
 import platform
 import time
+import urllib.parse
 
 from py4j.java_gateway import JavaGateway, GatewayParameters
 import datetime as dt
@@ -17,15 +18,21 @@ from nshm_toshi_client.general_task import GeneralTask
 from nshm_toshi_client.task_relation import TaskRelation
 
 from runzi.automation.scaling.toshi_api import ToshiApi
+from runzi.util.aws import get_secret
 
 API_URL  = os.getenv('NZSHM22_TOSHI_API_URL', "http://127.0.0.1:5000/graphql")
-API_KEY = os.getenv('NZSHM22_TOSHI_API_KEY', "")
+API_KEY = os.getenv('NZSHM22_TOSHI_API_KEY', "*****")
 S3_URL = os.getenv('NZSHM22_TOSHI_S3_URL',"http://localhost:4569")
 
+#Get API key from AWS secrets manager
+if 'TEST' in API_URL.upper():
+    API_KEY = get_secret("NZSHM22_TOSHI_API_SECRET_TEST", "us-east-1").get("NZSHM22_TOSHI_API_KEY_TEST")
+elif 'PROD' in API_URL.upper():
+    API_KEY = get_secret("NZSHM22_TOSHI_API_SECRET_PROD", "us-east-1").get("NZSHM22_TOSHI_API_KEY_PROD")
 
 class BuilderTask():
     """
-    COnfigure the python client for a InversionTask
+    Configure the python client for a InversionTask
     """
     def __init__(self, job_args):
 
@@ -33,8 +40,8 @@ class BuilderTask():
 
         #setup the java gateway binding
         self._gateway = JavaGateway(gateway_parameters=GatewayParameters(port=job_args['java_gateway_port']))
-        repos = ["opensha", "nzshm-opensha", "nzshm-runzi"]
-        self._repoheads = get_repo_heads(PurePath(job_args['root_folder']), repos)
+        #repos = ["opensha", "nzshm-opensha", "nzshm-runzi"]
+        #self._repoheads = get_repo_heads(PurePath(job_args['root_folder']), repos)
         self._output_folder = PurePath(job_args.get('working_path'))
 
         if self.use_api:
@@ -53,9 +60,9 @@ class BuilderTask():
 
         environment = {
             "host": platform.node(),
-            "gitref_opensha":self._repoheads['opensha'],
-            "gitref_nzshm-opensha":self._repoheads['nzshm-opensha'],
-            "gitref_nzshm-runzi":self._repoheads['nzshm-runzi']
+            #"gitref_opensha":self._repoheads['opensha'],
+            #"gitref_nzshm-opensha":self._repoheads['nzshm-opensha'],
+            #"gitref_nzshm-runzi":self._repoheads['nzshm-runzi']
             }
 
         if self.use_api:
@@ -239,9 +246,14 @@ if __name__ == "__main__":
     parser.add_argument("config")
     args = parser.parse_args()
 
-    config_file = args.config
-    f= open(config_file, 'r', encoding='utf-8')
-    config = json.load(f)
+    try:
+        # LOCAL and CLUSTER this is a file
+        config_file = args.config
+        f= open(args.config, 'r', encoding='utf-8')
+        config = json.load(f)
+    except:
+        # for AWS this must be a quoted JSON string
+        config = json.loads(urllib.parse.unquote(args.config))
 
     # maybe the JVM App is a little slow to get listening
     time.sleep(5)

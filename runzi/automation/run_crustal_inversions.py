@@ -2,37 +2,43 @@ import os
 import pwd
 import itertools
 import stat
+import json
 from pathlib import PurePath
 from subprocess import check_call
 from multiprocessing.dummy import Pool
+import boto3
 
 import datetime as dt
 
-from .scaling.toshi_api import ToshiApi, CreateGeneralTaskArgs
-from .scaling.opensha_task_factory import OpenshaTaskFactory
-from .scaling.file_utils import download_files, get_output_file_id, get_output_file_ids
+from runzi.automation.scaling.toshi_api import ToshiApi, CreateGeneralTaskArgs
+from runzi.automation.scaling.opensha_task_factory import get_factory
+from runzi.automation.scaling.file_utils import download_files, get_output_file_id, get_output_file_ids
 
-from .scaling import inversion_solution_builder_task
+from runzi.automation.scaling import inversion_solution_builder_task, prepare_inversion
+from runzi.util.aws import get_ecs_job_config
 
 # Set up your local config, from environment variables, with some sone defaults
-from .scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
+from runzi.automation.scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
     JVM_HEAP_MAX, JVM_HEAP_START, USE_API, JAVA_THREADS,
-    API_KEY, API_URL, S3_URL, CLUSTER_MODE)
+    API_KEY, API_URL, S3_URL, CLUSTER_MODE, EnvMode)
 
 INITIAL_GATEWAY_PORT = 26533 #set this to ensure that concurrent scheduled tasks won't clash
 #JAVA_THREADS = 4
+
+if CLUSTER_MODE == EnvMode['AWS']:
+    WORK_PATH='/WORKING'
 
 def build_crustal_tasks(general_task_id, rupture_sets, args):
     task_count = 0
 
     # java_threads = int(args['threads_per_selector']) * int(args['averaging_threads'])
 
-    task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, inversion_solution_builder_task,
+    factory_class = get_factory(CLUSTER_MODE)
+
+    task_factory = factory_class(OPENSHA_ROOT, WORK_PATH, inversion_solution_builder_task,
         initial_gateway_port=INITIAL_GATEWAY_PORT,
         jre_path=OPENSHA_JRE, app_jar_path=FATJAR,
-        task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START,
-        pbs_ppn=None,
-        pbs_script=CLUSTER_MODE)
+        task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START)
 
     for (rid, rupture_set_info) in rupture_sets.items():
         for (_round, completion_energy, max_inversion_time,
@@ -109,20 +115,31 @@ def build_crustal_tasks(general_task_id, rupture_sets, args):
                 use_api = USE_API,
                 )
 
-            #write a config
-            task_factory.write_task_config(task_arguments, job_arguments)
+            if CLUSTER_MODE == EnvMode['AWS']:
 
-            script = task_factory.get_task_script()
+                job_name = f"Runzi-automation-crustal_inversions-{task_count}"
+                config_data = dict(task_arguments=task_arguments, job_arguments=job_arguments)
 
-            script_file_path = PurePath(WORK_PATH, f"task_{task_count}.sh")
-            with open(script_file_path, 'w') as f:
-                f.write(script)
+                yield get_ecs_job_config(job_name, rid, config_data,
+                    toshi_api_url=API_URL, toshi_s3_url=S3_URL,
+                    time_minutes=int(max_inversion_time), memory=30720, vcpu=4)
 
-            #make file executable
-            st = os.stat(script_file_path)
-            os.chmod(script_file_path, st.st_mode | stat.S_IEXEC)
+            else:
+                #write a config
+                task_factory.write_task_config(task_arguments, job_arguments)
 
-            yield str(script_file_path)
+                script = task_factory.get_task_script()
+
+                script_file_path = PurePath(WORK_PATH, f"task_{task_count}.sh")
+                with open(script_file_path, 'w') as f:
+                    f.write(script)
+
+                #make file executable
+                st = os.stat(script_file_path)
+                os.chmod(script_file_path, st.st_mode | stat.S_IEXEC)
+
+                yield str(script_file_path)
+
             #return
 
 if __name__ == "__main__":
@@ -139,12 +156,8 @@ if __name__ == "__main__":
     INITIAL_GATEWAY_PORT = 26533 #set this to ensure that concurrent scheduled tasks won't clash
 
     #If using API give this task a descriptive setting...
-    TASK_TITLE = "Modular Inversions: Coulomb D90 Geodetic vs Geologic; TMG vs Generalised"
-    TASK_DESCRIPTION = """The D90 Coulomb Rupture set, with some more ballpark sweeps:
-     - the geologic slip rates from the fault model (CFM)
-     - the geodetic no-prior model with uniform std-dev
-     - The two new scaling relations: SMPL_NZ_CRU_MN vs TMG_CRU_2017
-    """
+    TASK_TITLE = "MModular Inversions: Coulomb D90 Geologic; Simplified Scaling Upper bound: TEST ECS"
+    TASK_DESCRIPTION = """targeted sans_TVZ b/N values"""
 
     GENERAL_TASK_ID = None
 
@@ -163,26 +176,26 @@ if __name__ == "__main__":
      - file_generator = get_output_file_ids(general_api, upstream_task_id)
     """
     #for a single rupture set, pass a valid FileID
-    file_generator = get_output_file_id(toshi_api, file_id) #for file by file ID
 
+    file_generator = get_output_file_id(toshi_api, file_id) #for file by file ID
     rupture_sets = download_files(toshi_api, file_generator, str(WORK_PATH), overwrite=False)
 
     args = dict(
         rounds = [str(x) for x in range(1)],
         completion_energies = ['0.0'], # 0.005]
-        max_inversion_times = ['1'], #8*60,] #3*60,]  #units are minutes
+        max_inversion_times = ['3'], #8*60,] #3*60,]  #units are minutes
         #max_inversion_times.reverse()
 
         deformation_models = ['FAULT_MODEL',], # GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw, 'GEOD_NO_PRIOR_UNISTD_D90_RmlsZTozMDMuMEJCOVVY',
-        mfd_mag_gt_5_sans = ['2.0', '5.6'],
-        mfd_mag_gt_5_tvz = ['0.21'],
-        mfd_b_values_sans = ['0.86',  '1.08'],
-        mfd_b_values_tvz = ['1.18', '1.08'],
-        mfd_transition_mags = ['7.85'],
+        mfd_mag_gt_5_sans = [2.0, 5.0],
+        mfd_mag_gt_5_tvz = [0.2],
+        mfd_b_values_sans = [0.97, 0.86],
+        mfd_b_values_tvz = [0.97],
+        mfd_transition_mags = [7.85],
 
         seismogenic_min_mags  = ['7.0'],
-        mfd_equality_weights = ['1e4'],
-        mfd_inequality_weights = ['0'],
+        mfd_equality_weights = [1e4, 1.3],
+        mfd_inequality_weights = [0],
 
         slip_rate_weighting_types = ['BOTH'], #NORMALIZED_BY_SLIP_RATE', UNCERTAINTY_ADJUSTED', BOTH
 
@@ -191,8 +204,8 @@ if __name__ == "__main__":
         slip_uncertainty_scaling_factors = ['',],#2,]
 
         #these are used for BOTH, NORMALIZED and UNNORMALIZED
-        slip_rate_normalized_weights = ['1e4'],
-        slip_rate_unnormalized_weights = ['1e3',],
+        slip_rate_normalized_weights = ['1e4', '1e3'],
+        slip_rate_unnormalized_weights = ['1e4'],
 
         #New modular inversion configurations
         selection_interval_secs = ['1'],
@@ -203,7 +216,7 @@ if __name__ == "__main__":
         perturbation_function = ['EXPONENTIAL_SCALE'], # UNIFORM_NO_TEMP_DEPENDENCE, EXPONENTIAL_SCALE;
 
         #Scaling Relationships
-        scaling_relationships=['SMPL_NZ_CRU_MN'], #'SMPL_NZ_INT_LW', 'SMPL_NZ_INT_UP'],
+        scaling_relationships=['SMPL_NZ_INT_UP'], #'SMPL_NZ_INT_LW', 'SMPL_NZ_INT_UP'],
         scaling_recalc_mags=['True']
 
     )
@@ -225,25 +238,36 @@ if __name__ == "__main__":
 
     print("GENERAL_TASK_ID:", GENERAL_TASK_ID)
 
+    if CLUSTER_MODE == EnvMode['AWS']:
+        batch_client = boto3.client(
+            service_name='batch',
+            region_name='us-east-1',
+            endpoint_url='https://batch.us-east-1.amazonaws.com')
+
     scripts = []
-    for script_file in build_crustal_tasks(GENERAL_TASK_ID, rupture_sets, args):
-        scripts.append(script_file)
+    for script_file_or_config in build_crustal_tasks(GENERAL_TASK_ID, rupture_sets, args):
+        scripts.append(script_file_or_config)
 
-    def call_script(script_name):
-        print("call_script with:", script_name)
-        if CLUSTER_MODE:
-            check_call(['qsub', script_name])
-        else:
-            check_call(['bash', script_name])
+    if CLUSTER_MODE == EnvMode['LOCAL']:
+        def call_script(script_or_config):
+            print("call_script with:", script_or_config)
+            check_call(['bash', script_or_config])
 
+        print('task count: ', len(scripts))
+        print('worker count: ', WORKER_POOL_SIZE)
+        pool = Pool(WORKER_POOL_SIZE)
+        pool.map(call_script, scripts)
+        pool.close()
+        pool.join()
 
-    print('task count: ', len(scripts))
-    print('worker count: ', WORKER_POOL_SIZE)
-
-    pool = Pool(WORKER_POOL_SIZE)
-
-    pool.map(call_script, scripts[:6])
-    pool.close()
-    pool.join()
+    elif CLUSTER_MODE == EnvMode['AWS']:
+        for script_or_config in scripts:
+            #print('AWS_TIME!: ', script_or_config)
+            res = batch_client.submit_job(**script_or_config)
+            print(res)
+    else:
+        for script_or_config in scripts:
+            check_call(['qsub', script_or_config])
 
     print("Done! in %s secs" % (dt.datetime.utcnow() - t0).total_seconds())
+    print("GENERAL_TASK_ID:", GENERAL_TASK_ID)
