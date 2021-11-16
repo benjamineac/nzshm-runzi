@@ -9,6 +9,7 @@ import datetime as dt
 from runzi.automation.run_crustal_inversions import build_crustal_tasks
 from runzi.automation.scaling.toshi_api import ToshiApi, CreateGeneralTaskArgs
 from runzi.automation.scaling.file_utils import download_files, get_output_file_id, get_output_file_ids
+from runzi.util.aws import get_secret
 
 # Set up your local config, from environment variables, with some sone defaults
 from runzi.automation.scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
@@ -32,6 +33,13 @@ def run_crustal_inversion(config):
 
     if CLUSTER_MODE == EnvMode['AWS']:
         WORK_PATH='/WORKING'
+
+    #Get API key from AWS secrets manager
+    if 'TEST' in API_URL.upper():
+        API_KEY = get_secret("NZSHM22_TOSHI_API_SECRET_TEST", "us-east-1").get("NZSHM22_TOSHI_API_KEY_TEST")
+    elif 'PROD' in API_URL.upper():
+        API_KEY = get_secret("NZSHM22_TOSHI_API_SECRET_PROD", "us-east-1").get("NZSHM22_TOSHI_API_KEY_PROD")
+
 
     headers={"x-api-key":API_KEY}
     toshi_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
