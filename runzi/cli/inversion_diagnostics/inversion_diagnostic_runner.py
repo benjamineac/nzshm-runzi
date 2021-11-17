@@ -2,9 +2,11 @@ import os
 import stat
 import boto3
 import datetime as dt
+import inquirer
 from pathlib import PurePath
 from subprocess import check_call
 from multiprocessing.dummy import Pool
+
 from runzi.automation.run_inversion_diagnostics import run_tasks
 from runzi.automation.scaling.toshi_api import ToshiApi
 from runzi.automation.scaling.file_utils import download_files, get_output_file_ids
@@ -65,7 +67,11 @@ def inversion_diagnostic_runner(general_task_id):
 
     print("Done! in %s secs" % (dt.datetime.utcnow() - t0).total_seconds())
 
-if __name__ == "__main__":
-    inversion_diagnostic_runner('R2VuZXJhbFRhc2s6MTI2NXQ4ajhm')
+
+def inversion_diagnostic_query(*args):
+    general_task_id = inquirer.text('General Task ID: ')
+    confirm = inquirer.confirm(f'Confirm you want to run inversion diagnostics for ID: {general_task_id}')
+    if confirm == True:
+        inversion_diagnostic_runner(general_task_id)
 
 
