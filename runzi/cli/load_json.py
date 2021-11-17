@@ -5,7 +5,7 @@ import inquirer
 
 from runzi.cli.cli_helpers import display, from_json_format
 from runzi.cli.config.inversion_builder import Config
-from runzi.cli.inv_setup import global_config
+import runzi.cli.inv_setup
 
 
 def load_crustal(*args): load_from_json("INVERSION", "CRUSTAL")
@@ -35,8 +35,8 @@ def load_from_json(subtask, model):
 
 def parse_config(config):
     formatted_json = from_json_format(config)
-    global_config = Config()
-    global_config.from_json(formatted_json)
+    runzi.cli.inv_setup.global_config = Config()
+    runzi.cli.inv_setup.global_config.from_json(formatted_json)
 
 def parse_config_locally_and_display(config):
     #Displays config without making it the global_config

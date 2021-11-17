@@ -4,7 +4,7 @@ import sys
 from runzi.cli.cli_helpers import MenuHandler, landing_banner
 from runzi.cli.inv_setup import *
 from runzi.cli.load_json import load_from_json
-from runzi.cli.inversion_diagnostics.inversion_diagnostic_runner import inversion_diagnostic_query
+from runzi.cli.inversion_diagnostic_runner import inversion_diagnostic_query
 
 
 context = 'runziCLI'
