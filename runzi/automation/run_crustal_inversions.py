@@ -120,7 +120,7 @@ def build_crustal_tasks(general_task_id, rupture_sets, args):
                 job_name = f"Runzi-automation-crustal_inversions-{task_count}"
                 config_data = dict(task_arguments=task_arguments, job_arguments=job_arguments)
 
-                yield get_ecs_job_config(job_name, rid, config_data,
+                yield get_ecs_job_config(job_name, config_data,
                     toshi_api_url=API_URL, toshi_s3_url=S3_URL,
                     time_minutes=int(max_inversion_time), memory=30720, vcpu=4)
 

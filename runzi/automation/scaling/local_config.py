@@ -37,3 +37,6 @@ FATJAR = os.getenv('NZSHM22_FATJAR', None) or str(PurePath(OPENSHA_ROOT, "nzshm-
 WORK_PATH = os.getenv('NZSHM22_SCRIPT_WORK_PATH', PurePath(os.getcwd(), "tmp"))
 
 CLUSTER_MODE = EnvMode[os.getenv('NZSHM22_SCRIPT_CLUSTER_MODE','LOCAL')] #Wase True/False now EnvMode: LOCAL, CLUSTER, AWS
+
+BUILD_PLOTS = os.getenv('NZSHM22_BUILD_PLOTS' , False)
+REPORT_LEVEL = os.getenv('NZSHM22_REPORT_LEVEL' , 'DEFAULT')
