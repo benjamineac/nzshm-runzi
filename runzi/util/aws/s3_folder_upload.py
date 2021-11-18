@@ -11,7 +11,7 @@ from logging import info, error
 from runzi.automation.scaling.local_config import WORK_PATH, S3_UPLOAD_WORKERS
 
 
-logging.basicConfig(level=logging.info)
+logging.basicConfig(level="INFO")
 S3_REPORT_BUCKET_ROOT = 'opensha/DATA/'
 
 def upload_to_bucket(id, bucket, root_path=S3_REPORT_BUCKET_ROOT):
