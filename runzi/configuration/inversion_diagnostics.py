@@ -23,6 +23,9 @@ from runzi.automation.scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPEN
 INITIAL_GATEWAY_PORT = 26533 #set this to ensure that concurrent scheduled tasks won't clash
 MAX_JOB_TIME_SECS = 60*30 #Change this soon
 
+if CLUSTER_MODE == EnvMode['AWS']:
+    WORK_PATH='/WORKING'
+    
 def generate_tasks_or_configs(general_task_id, solutions):
     task_count = 0
 
@@ -61,8 +64,6 @@ def generate_tasks_or_configs(general_task_id, solutions):
             )
 
         if CLUSTER_MODE == EnvMode['AWS']:
-            del task_arguments['file_path']
-            del job_arguments['working_path']
             del job_arguments['root_folder']
             job_name = f"Runzi-automation-inversion_diagnostic-{task_count}"
             config_data = dict(task_arguments=task_arguments, job_arguments=job_arguments)

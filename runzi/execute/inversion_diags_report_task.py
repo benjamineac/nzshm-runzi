@@ -1,6 +1,6 @@
 import argparse
 import json
-from runzi.automation.scaling.local_config import S3_REPORT_BUCKET
+from runzi.automation.scaling.local_config import S3_REPORT_BUCKET, WORK_PATH
 import git
 import os
 import base64
@@ -39,7 +39,7 @@ class BuilderTask():
         self._gateway = JavaGateway(gateway_parameters=GatewayParameters(port=job_args['java_gateway_port']))
         self._report_builder = self._gateway.entry_point.getInversionDiagnosticsReportBuilder()
         self._page_gen = self._gateway.entry_point.getReportPageGen()
-        self._output_folder = PurePath(job_args.get('working_path'))
+        self._output_folder = PurePath(WORK_PATH)
 
     def run(self, task_arguments, job_arguments):
         # Run the task....

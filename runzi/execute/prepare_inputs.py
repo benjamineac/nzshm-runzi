@@ -22,7 +22,7 @@ def prepare_inputs(file_id):
     file_generator = get_output_file_id(toshi_api, file_id) #for file by file ID
 
     rupture_sets = download_files(toshi_api, file_generator, str(WORK_PATH), overwrite=False)
-
+    
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
