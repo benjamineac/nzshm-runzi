@@ -122,6 +122,7 @@ def build_crustal_tasks(general_task_id, rupture_sets, args):
 
                 yield get_ecs_job_config(job_name, rupture_set_info['id'], config_data,
                     toshi_api_url=API_URL, toshi_s3_url=S3_URL, toshi_report_bucket=S3_REPORT_BUCKET,
+                    task_module=inversion_solution_builder_task.__name__,
                     time_minutes=int(max_inversion_time), memory=30720, vcpu=4)
 
             else:

@@ -1,7 +1,7 @@
 FROM adoptopenjdk/openjdk11:alpine-jre
 LABEL Chris Chamberlain <chrisbc@artisan.co.nz>
 RUN apk add --no-cache curl tar bash procps \
-	python3 py3-pip git
+	python3 py3-pip git ttf-dejavu
 
 WORKDIR /app/nzshm-opensha/build/libs
 COPY nzshm-opensha/build/libs/nzshm-opensha-all.jar .
@@ -15,7 +15,7 @@ RUN git clone https://github.com/GNS-Science/nzshm-runzi.git
 
 WORKDIR /app/nzshm-runzi
 RUN git fetch
-RUN git checkout origin/feature/make_runzi_cli_default_container_cmd
+RUN git checkout origin/feature/cli-reports
 RUN pip3 install -r requirements.txt
 RUN pip3 install -e .
 
@@ -25,8 +25,8 @@ ENV NZSHM22_OPENSHA_JRE=/opt/java/openjdk/bin/java
 ENV NZSHM22_FATJAR=/app/nzshm-opensha/build/libs/nzshm-opensha-all.jar
 ENV NZSHM22_OPENSHA_ROOT=/app
 
-ENV PYTHON_PREP_MODULE=/app/nzshm-runzi/runzi/automation/scaling/prepare_inversion.py
-ENV PYTHON_TASK_MODULE=runzi.automation.scaling.inversion_solution_builder_task
+ENV PYTHON_PREP_MODULE=SET_AT_RUNTIME
+ENV PYTHON_TASK_MODULE=SET_AT_RUNTIME
 
 CMD ["python3 /app/nzshm-runzi/runzi/cli/cli.py"]
 ENTRYPOINT ["/bin/bash", "-c"]

@@ -61,7 +61,6 @@ def inversion_diagnostic_runner(general_task_id):
     elif CLUSTER_MODE == EnvMode['AWS']:
         for script_or_config in scripts:
             print('AWS_TIME!: ', script_or_config)
-            assert True == False
             res = batch_client.submit_job(**script_or_config)
             print(res)
 

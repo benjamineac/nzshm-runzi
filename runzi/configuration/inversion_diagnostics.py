@@ -70,6 +70,7 @@ def generate_tasks_or_configs(general_task_id, solutions):
 
             yield get_ecs_job_config(job_name, solution_info['id'], config_data,
                 toshi_api_url=API_URL, toshi_s3_url=S3_URL, toshi_report_bucket=S3_REPORT_BUCKET,
+                task_module=inversion_diags_report_task.__name__,
                 time_minutes=int(MAX_JOB_TIME_SECS), memory=30720, vcpu=4)
 
         else: 
