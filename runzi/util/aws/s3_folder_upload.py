@@ -8,11 +8,14 @@ import shutil
 import logging
 from logging import info, error
 
-from runzi.automation.scaling.local_config import WORK_PATH, S3_UPLOAD_WORKERS, S3_ROOT_PATH
+from runzi.automation.scaling.local_config import WORK_PATH, S3_UPLOAD_WORKERS
+
 
 logging.basicConfig(level=logging.info)
+S3_REPORT_BUCKET_ROOT = 'opensha/DATA/'
 
-def upload_to_bucket(id, bucket):
+def upload_to_bucket(id, bucket, root_path=S3_REPORT_BUCKET_ROOT):
+    info(f"Beginning bucket upload... to {bucket}/{root_path}/{id}")
     t0 = dt.datetime.utcnow()
     local_directory = WORK_PATH + '/' + id
     session = boto3.session.Session()
@@ -23,7 +26,7 @@ def upload_to_bucket(id, bucket):
 
             local_path = os.path.join(root, filename)
             relative_path = os.path.relpath(local_path, local_directory)
-            s3_path = os.path.join(S3_ROOT_PATH, id, relative_path)
+            s3_path = os.path.join(root_path, id, relative_path)
 
             file_list.append((local_path, bucket, s3_path))
 
