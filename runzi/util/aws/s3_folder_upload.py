@@ -5,6 +5,7 @@ import os
 from multiprocessing.pool import ThreadPool
 import datetime as dt
 import shutil
+import mimetypes 
 import logging
 from logging import info, error
 
@@ -13,6 +14,7 @@ from runzi.automation.scaling.local_config import WORK_PATH, S3_UPLOAD_WORKERS
 
 logging.basicConfig(level="INFO")
 S3_REPORT_BUCKET_ROOT = 'opensha/DATA/'
+
 
 def upload_to_bucket(id, bucket, root_path=S3_REPORT_BUCKET_ROOT):
     info(f"Beginning bucket upload... to {bucket}/{root_path}/{id}")
@@ -39,7 +41,11 @@ def upload_to_bucket(id, bucket, root_path=S3_REPORT_BUCKET_ROOT):
 
         else:
             try:
-                client.upload_file(local_path, bucket, s3_path, ExtraArgs={'ACL':'public-read'})
+                client.upload_file(local_path, bucket, s3_path,
+                    ExtraArgs={
+                        'ACL':'public-read',
+                        'ContentType': mimetype(local_path)
+                        })
                 info("Uploading %s..." % s3_path)
             except Exception as e:
                 error(f"exception raised uploading {local_path} => {bucket}/{s3_path}")
@@ -73,3 +79,9 @@ def cleanup(directory):
         info('Cleaned up %s' % directory)
     except Exception as e:
         error(e)
+
+def mimetype(local_path):
+    mimetype, _ = mimetypes.guess_type(local_path)
+    if mimetype is None:
+        raise Exception("Failed to guess mimetype")
+    return mimetype
