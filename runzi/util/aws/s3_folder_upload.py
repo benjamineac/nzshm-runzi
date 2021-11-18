@@ -5,8 +5,12 @@ import os
 from multiprocessing.pool import ThreadPool
 import datetime as dt
 import shutil
+import logging
+from logging import info, error
 
 from runzi.automation.scaling.local_config import WORK_PATH, S3_UPLOAD_WORKERS, S3_ROOT_PATH
+
+logging.basicConfig(level=logging.info)
 
 def upload_to_bucket(id, bucket):
     t0 = dt.datetime.utcnow()
@@ -28,15 +32,15 @@ def upload_to_bucket(id, bucket):
         local_path, bucket, s3_path = args[0], args[1], args[2]
 
         if path_exists(s3_path, bucket):
-            print("Path found on S3! Skipping %s to %s" % (s3_path, bucket))
+            info("Path found on S3! Skipping %s to %s" % (s3_path, bucket))
 
         else:
             try:
                 client.upload_file(local_path, bucket, s3_path, ExtraArgs={'ACL':'public-read'})
-                print("Uploading %s..." % s3_path)
+                info("Uploading %s..." % s3_path)
             except Exception as e:
-                print(f"exception raised uploading {local_path} => {bucket}/{s3_path}")
-                print(e)
+                error(f"exception raised uploading {local_path} => {bucket}/{s3_path}")
+                error(e)
     
     def path_exists(path, bucket_name):
         """Check to see if an object exists on S3"""
@@ -48,7 +52,7 @@ def upload_to_bucket(id, bucket):
             if e.response['Error']['Code'] == "404":
                 return False
             else:
-                print(f"exception raised on {bucket_name}/{path}")
+                error(f"exception raised on {bucket_name}/{path}")
                 raise e
         return True
         
@@ -57,12 +61,12 @@ def upload_to_bucket(id, bucket):
 
     pool.close()
     pool.join()
-    print("Done! uploaded %s in %s secs" % (len(file_list), (dt.datetime.utcnow() - t0).total_seconds()))
+    info("Done! uploaded %s in %s secs" % (len(file_list), (dt.datetime.utcnow() - t0).total_seconds()))
     cleanup(local_directory)
 
 def cleanup(directory):
     try:
         shutil.rmtree(directory)
-        print('Cleaned up %s' % directory)
+        info('Cleaned up %s' % directory)
     except Exception as e:
-        print(e)
+        error(e)
