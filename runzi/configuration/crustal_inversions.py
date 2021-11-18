@@ -20,7 +20,7 @@ from runzi.util.aws import get_ecs_job_config
 # Set up your local config, from environment variables, with some sone defaults
 from runzi.automation.scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
     JVM_HEAP_MAX, JVM_HEAP_START, USE_API, JAVA_THREADS,
-    API_KEY, API_URL, S3_URL, CLUSTER_MODE, EnvMode)
+    API_KEY, API_URL, S3_URL, S3_REPORT_BUCKET, CLUSTER_MODE, EnvMode)
 
 INITIAL_GATEWAY_PORT = 26533 #set this to ensure that concurrent scheduled tasks won't clash
 #JAVA_THREADS = 4
@@ -120,8 +120,8 @@ def build_crustal_tasks(general_task_id, rupture_sets, args):
                 job_name = f"Runzi-automation-crustal_inversions-{task_count}"
                 config_data = dict(task_arguments=task_arguments, job_arguments=job_arguments)
 
-                yield get_ecs_job_config(job_name, config_data,
-                    toshi_api_url=API_URL, toshi_s3_url=S3_URL,
+                yield get_ecs_job_config(job_name, rupture_set_info['id'], config_data,
+                    toshi_api_url=API_URL, toshi_s3_url=S3_URL, toshi_report_bucket=S3_REPORT_BUCKET,
                     time_minutes=int(max_inversion_time), memory=30720, vcpu=4)
 
             else:

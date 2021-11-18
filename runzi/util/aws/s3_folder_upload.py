@@ -11,7 +11,7 @@ from runzi.automation.scaling.local_config import WORK_PATH, S3_UPLOAD_WORKERS
 def upload_to_bucket(id, bucket):
     t0 = dt.datetime.utcnow()
     local_directory = WORK_PATH + '/' + id
-    session = boto3.session.Session(region_name='us-east-1')
+    session = boto3.session.Session()
     client = session.client('s3')
     file_list = []
     for root, dirs, files in os.walk(local_directory):
@@ -34,13 +34,13 @@ def upload_to_bucket(id, bucket):
             try:
                 client.upload_file(local_path, bucket, s3_path)
                 print("Uploading %s..." % s3_path)
-
             except Exception as e:
+                print(f"exception raised uploading {local_path} => {bucket}/{s3_path}")
                 print(e)
     
     def path_exists(path, bucket_name):
         """Check to see if an object exists on S3"""
-        resource_session = boto3.session.Session(region_name='us-east-1')
+        resource_session = boto3.session.Session()
         s3 = resource_session.resource('s3')
         try:
             s3.ObjectSummary(bucket_name=bucket_name, key=path).load()
@@ -48,6 +48,7 @@ def upload_to_bucket(id, bucket):
             if e.response['Error']['Code'] == "404":
                 return False
             else:
+                print(f"exception raised on {bucket_name}/{path}")
                 raise e
         return True
         

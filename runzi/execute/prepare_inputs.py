@@ -26,10 +26,10 @@ def prepare_inputs(file_id):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("rupture_set_file_id")
+    parser.add_argument("file_id")
     args = parser.parse_args()
 
-    print(f"Attempt to download: ${args.rupture_set_file_id}")
+    print(f"Attempt to download: ${args.file_id}")
 
     #Get API key from AWS secrets manager
     if 'TEST' in API_URL.upper():
@@ -37,6 +37,6 @@ if __name__ == "__main__":
     elif 'PROD' in API_URL.upper():
         API_KEY = get_secret("NZSHM22_TOSHI_API_SECRET_PROD", "us-east-1").get("NZSHM22_TOSHI_API_KEY_PROD")
 
-    prepare_inputs(args.rupture_set_file_id)
+    prepare_inputs(args.file_id)
 
 

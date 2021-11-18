@@ -18,7 +18,7 @@ from runzi.execute import inversion_diags_report_task
 # Set up your local config, from environment variables, with some sone defaults
 from runzi.automation.scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
     JVM_HEAP_MAX, JVM_HEAP_START, USE_API, JAVA_THREADS,
-    API_KEY, API_URL, S3_URL, CLUSTER_MODE, BUILD_PLOTS, REPORT_LEVEL, EnvMode)
+    API_KEY, API_URL, S3_URL, S3_REPORT_BUCKET, CLUSTER_MODE, BUILD_PLOTS, REPORT_LEVEL, EnvMode)
 
 INITIAL_GATEWAY_PORT = 26533 #set this to ensure that concurrent scheduled tasks won't clash
 MAX_JOB_TIME_SECS = 60*30 #Change this soon
@@ -68,8 +68,8 @@ def generate_tasks_or_configs(general_task_id, solutions):
             job_name = f"Runzi-automation-inversion_diagnostic-{task_count}"
             config_data = dict(task_arguments=task_arguments, job_arguments=job_arguments)
 
-            yield get_ecs_job_config(job_name, config_data,
-                toshi_api_url=API_URL, toshi_s3_url=S3_URL,
+            yield get_ecs_job_config(job_name, solution_info['id'], config_data,
+                toshi_api_url=API_URL, toshi_s3_url=S3_URL, toshi_report_bucket=S3_REPORT_BUCKET,
                 time_minutes=int(MAX_JOB_TIME_SECS), memory=30720, vcpu=4)
 
         else: 
