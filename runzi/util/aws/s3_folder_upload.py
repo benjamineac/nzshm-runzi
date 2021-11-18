@@ -6,7 +6,7 @@ from multiprocessing.pool import ThreadPool
 import datetime as dt
 import shutil
 
-from runzi.automation.scaling.local_config import WORK_PATH, S3_UPLOAD_WORKERS
+from runzi.automation.scaling.local_config import WORK_PATH, S3_UPLOAD_WORKERS, S3_ROOT_PATH
 
 def upload_to_bucket(id, bucket):
     t0 = dt.datetime.utcnow()
@@ -19,7 +19,7 @@ def upload_to_bucket(id, bucket):
 
             local_path = os.path.join(root, filename)
             relative_path = os.path.relpath(local_path, local_directory)
-            s3_path = os.path.join(id, relative_path)
+            s3_path = os.path.join(S3_ROOT_PATH, id, relative_path)
 
             file_list.append((local_path, bucket, s3_path))
 
@@ -32,7 +32,7 @@ def upload_to_bucket(id, bucket):
 
         else:
             try:
-                client.upload_file(local_path, bucket, s3_path)
+                client.upload_file(local_path, bucket, s3_path, ExtraArgs={'ACL':'public-read'})
                 print("Uploading %s..." % s3_path)
             except Exception as e:
                 print(f"exception raised uploading {local_path} => {bucket}/{s3_path}")
