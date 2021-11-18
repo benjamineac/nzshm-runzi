@@ -7,7 +7,7 @@ from runzi.util.aws import get_secret
 from runzi.automation.scaling.local_config import (WORK_PATH,
     API_URL, S3_URL, CLUSTER_MODE, EnvMode)
    
-def prepare_inversion_inputs(rupture_set_file_id):
+def prepare_inputs(file_id):
     """
     CHOOSE ONE OF:
 
@@ -19,10 +19,9 @@ def prepare_inversion_inputs(rupture_set_file_id):
     toshi_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
 
     #for a single rupture set, pass a valid FileID
-    file_generator = get_output_file_id(toshi_api, rupture_set_file_id) #for file by file ID
+    file_generator = get_output_file_id(toshi_api, file_id) #for file by file ID
 
     rupture_sets = download_files(toshi_api, file_generator, str(WORK_PATH), overwrite=False)
-
 
 if __name__ == "__main__":
 
@@ -38,6 +37,6 @@ if __name__ == "__main__":
     elif 'PROD' in API_URL.upper():
         API_KEY = get_secret("NZSHM22_TOSHI_API_SECRET_PROD", "us-east-1").get("NZSHM22_TOSHI_API_KEY_PROD")
 
-    prepare_inversion_inputs(args.rupture_set_file_id)
+    prepare_inputs(args.rupture_set_file_id)
 
 

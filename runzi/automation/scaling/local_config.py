@@ -40,3 +40,7 @@ CLUSTER_MODE = EnvMode[os.getenv('NZSHM22_SCRIPT_CLUSTER_MODE','LOCAL')] #Wase T
 
 BUILD_PLOTS = os.getenv('NZSHM22_BUILD_PLOTS' , False)
 REPORT_LEVEL = os.getenv('NZSHM22_REPORT_LEVEL' , 'DEFAULT')
+
+#S3 report bucket name
+S3_REPORT_BUCKET = os.getenv('NZSHM22_S3_REPORT_BUCKET', 'nzshm-static-reports-test')
+S3_UPLOAD_WORKERS = os.getenv('NZSHM22_S3_UPLOAD_WORKERS', 50)

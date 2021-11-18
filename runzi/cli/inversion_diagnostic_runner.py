@@ -7,7 +7,7 @@ from pathlib import PurePath
 from subprocess import check_call
 from multiprocessing.dummy import Pool
 
-from runzi.automation.run_inversion_diagnostics import run_tasks
+from runzi.configuration.inversion_diagnostics import generate_tasks_or_configs
 from runzi.automation.scaling.toshi_api import ToshiApi
 from runzi.automation.scaling.file_utils import download_files, get_output_file_ids
 from runzi.automation.scaling.opensha_task_factory import get_factory
@@ -43,7 +43,7 @@ def inversion_diagnostic_runner(general_task_id):
     solutions = download_files(file_api, file_generator, str(WORK_PATH), overwrite=False, skip_existing=False, skip_download=(CLUSTER_MODE == EnvMode['AWS']))
 
     scripts = []
-    for script_file in run_tasks(general_task_id, solutions):
+    for script_file in generate_tasks_or_configs(general_task_id, solutions):
         print('scheduling: ', script_file)
         scripts.append(script_file)
 

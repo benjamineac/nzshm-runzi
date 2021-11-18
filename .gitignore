@@ -10,3 +10,4 @@ share/**
 runzi/cli/config/saved_configs/**
 shell/**
 tmp/**
+**/.DS_Store
