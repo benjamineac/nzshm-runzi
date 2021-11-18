@@ -62,7 +62,9 @@ docker run -it --rm --env-file environ \
 -e AWS_PROFILE=toshi_batch_devops \
 -e NZSHM22_TOSHI_S3_URL \
 -e NZSHM22_TOSHI_API_URL \
-nzshm22/runzi-opensha-cli
+-e NZSHM22_SCRIPT_CLUSTER_MODE \
+-e NZSHM22_S3_REPORT_BUCKET \
+nzshm22/runzi-opensha
 ```
 
 ```
