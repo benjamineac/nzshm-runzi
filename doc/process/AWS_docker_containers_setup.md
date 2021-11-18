@@ -64,3 +64,13 @@ docker run -it --rm --env-file environ \
 -e NZSHM22_TOSHI_API_URL \
 nzshm22/runzi-opensha-cli
 ```
+
+```
+docker run -it --rm --env-file environ \
+-v $HOME/.aws/credentials:/root/.aws/credentials:ro \
+-v $(pwd)/../../runzi/cli/config/saved_configs:/app/nzshm-runzi/runzi/cli/config/saved_configs \
+-e AWS_PROFILE=developer_benjamineac \
+-e NZSHM22_TOSHI_S3_URL \
+-e NZSHM22_TOSHI_API_URL \
+nzshm22/runzi-opensha
+```

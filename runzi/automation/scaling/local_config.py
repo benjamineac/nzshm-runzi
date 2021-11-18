@@ -6,6 +6,7 @@ and is imported  by the various run_xxx.py scripts
 import os
 import enum
 from pathlib import PurePath
+from runzi.util.aws import get_secret 
 
 class EnvMode(enum.IntEnum):
     LOCAL = 0
@@ -14,8 +15,15 @@ class EnvMode(enum.IntEnum):
 
 #API Setting are needed to sore job details for later reference
 API_URL  = os.getenv('NZSHM22_TOSHI_API_URL', "http://127.0.0.1:5000/graphql")
-API_KEY = os.getenv('NZSHM22_TOSHI_API_KEY', "")
 S3_URL = os.getenv('NZSHM22_TOSHI_S3_URL',"http://localhost:4569")
+
+#Get API key from AWS secrets manager
+if 'TEST' in API_URL.upper():
+    API_KEY = get_secret("NZSHM22_TOSHI_API_SECRET_TEST", "us-east-1").get("NZSHM22_TOSHI_API_KEY_TEST")
+elif 'PROD' in API_URL.upper():
+    API_KEY = get_secret("NZSHM22_TOSHI_API_SECRET_PROD", "us-east-1").get("NZSHM22_TOSHI_API_KEY_PROD")
+else:
+    API_KEY = os.getenv('NZSHM22_TOSHI_API_KEY', "") 
 
 USE_API = os.getenv('NZSHM22_TOSHI_API_ENABLED' , False) == "1"
 

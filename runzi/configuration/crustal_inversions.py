@@ -14,7 +14,7 @@ from runzi.automation.scaling.toshi_api import ToshiApi, CreateGeneralTaskArgs
 from runzi.automation.scaling.opensha_task_factory import get_factory
 from runzi.automation.scaling.file_utils import download_files, get_output_file_id, get_output_file_ids
 
-from runzi.automation.scaling import inversion_solution_builder_task, prepare_inversion
+from runzi.execute import inversion_solution_builder_task
 from runzi.util.aws import get_ecs_job_config
 
 # Set up your local config, from environment variables, with some sone defaults

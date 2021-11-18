@@ -12,7 +12,8 @@ from runzi.util.build_named_fault_mfd_index import build_named_fault_mfd_index
 from py4j.java_gateway import JavaGateway, GatewayParameters
 import datetime as dt
 from dateutil.tz import tzutc
-from runzi.util.aws import get_secret, upload_to_bucket
+from runzi.util.aws import get_secret
+from runzi.util.aws.s3_folder_upload import upload_to_bucket
 
 import time
 

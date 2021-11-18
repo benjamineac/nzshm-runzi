@@ -16,6 +16,8 @@ from runzi.automation.scaling.local_config import (EnvMode, OPENSHA_ROOT, WORK_P
     JVM_HEAP_MAX, JVM_HEAP_START, USE_API, JAVA_THREADS,
     API_KEY, API_URL, S3_URL, CLUSTER_MODE, WORKER_POOL_SIZE)
 
+    
+
 def inversion_diagnostic_runner(general_task_id):
     t0 = dt.datetime.utcnow()
 
@@ -38,7 +40,7 @@ def inversion_diagnostic_runner(general_task_id):
             region_name='us-east-1',
             endpoint_url='https://batch.us-east-1.amazonaws.com')
 
-    # print((CLUSTER_MODE == EnvMode['AWS']))
+
     file_generator = get_output_file_ids(file_api, general_task_id)
     solutions = download_files(file_api, file_generator, str(WORK_PATH), overwrite=False, skip_existing=False, skip_download=(CLUSTER_MODE == EnvMode['AWS']))
 

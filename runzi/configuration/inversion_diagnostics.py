@@ -13,7 +13,7 @@ from runzi.automation.scaling.toshi_api import ToshiApi
 from runzi.automation.scaling.file_utils import download_files, get_output_file_ids
 from runzi.automation.scaling.opensha_task_factory import get_factory
 from runzi.util.aws import get_ecs_job_config
-import runzi.automation.scaling.inversion_diags_report_task
+from runzi.execute import inversion_diags_report_task
 
 # Set up your local config, from environment variables, with some sone defaults
 from runzi.automation.scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
@@ -27,7 +27,7 @@ def generate_tasks_or_configs(general_task_id, solutions):
     task_count = 0
 
     factory_class = get_factory(CLUSTER_MODE)
-    task_factory = factory_class(OPENSHA_ROOT, WORK_PATH, runzi.automation.scaling.inversion_diags_report_task,
+    task_factory = factory_class(OPENSHA_ROOT, WORK_PATH, inversion_diags_report_task,
         initial_gateway_port=INITIAL_GATEWAY_PORT,
         jre_path=OPENSHA_JRE, app_jar_path=FATJAR,
         task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START)
