@@ -107,8 +107,8 @@ class BuilderTask():
             if ta['slip_rate_weighting_type'] == 'UNCERTAINTY_ADJUSTED':
                 inversion_runner.setSlipRateUncertaintyConstraint(
                     ta['slip_rate_weighting_type'],
-                    float(ta['slip_rate_weight']),
-                    float(ta['slip_uncertainty_scaling_factor']))
+                    int(float(ta['slip_rate_weight'])),
+                    int(ta['slip_uncertainty_scaling_factor']))
             else:
                 #covers UCERF3 style SR constraints
                 inversion_runner.setSlipRateConstraint(ta['slip_rate_weighting_type'],
