@@ -81,6 +81,8 @@ def cleanup(directory):
         error(e)
 
 def mimetype(local_path):
+    mimetypes.add_type('text/markdown', '.md')
+    mimetypes.add_type('application/json', '.geojson')
     mimetype, _ = mimetypes.guess_type(local_path)
     if mimetype is None:
         raise Exception("Failed to guess mimetype")
