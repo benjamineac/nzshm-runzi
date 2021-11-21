@@ -13,6 +13,9 @@ class EnvMode(enum.IntEnum):
     CLUSTER = 1
     AWS = 2
 
+def boolean_env(environ_name):
+    return bool(os.getenv(environ_name, '').upper() in ["1", "Y", "YES", "TRUE"])
+
 #API Setting are needed to sore job details for later reference
 API_URL  = os.getenv('NZSHM22_TOSHI_API_URL', "http://127.0.0.1:5000/graphql")
 S3_URL = os.getenv('NZSHM22_TOSHI_S3_URL',"http://localhost:4569")
@@ -25,7 +28,7 @@ elif 'PROD' in API_URL.upper():
 else:
     API_KEY = os.getenv('NZSHM22_TOSHI_API_KEY', "") 
 
-USE_API = os.getenv('NZSHM22_TOSHI_API_ENABLED' , False) == "1"
+USE_API = boolean_env('NZSHM22_TOSHI_API_ENABLED')
 
 #How many threads to give each worker, setting this higher than # of virtual cores is pointless.
 JAVA_THREADS = os.getenv('NZSHM22_SCRIPT_JAVA_THREADS', 4) #each
@@ -46,7 +49,7 @@ WORK_PATH = os.getenv('NZSHM22_SCRIPT_WORK_PATH', PurePath(os.getcwd(), "tmp"))
 
 CLUSTER_MODE = EnvMode[os.getenv('NZSHM22_SCRIPT_CLUSTER_MODE','LOCAL')] #Wase True/False now EnvMode: LOCAL, CLUSTER, AWS
 
-BUILD_PLOTS = os.getenv('NZSHM22_BUILD_PLOTS' , False)
+BUILD_PLOTS = boolean_env('NZSHM22_BUILD_PLOTS')
 REPORT_LEVEL = os.getenv('NZSHM22_REPORT_LEVEL' , 'DEFAULT')
 
 #S3 report bucket name
