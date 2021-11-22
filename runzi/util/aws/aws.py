@@ -55,7 +55,7 @@ def get_secret(secret_name, region_name):
             return base64.b64decode(get_secret_value_response['SecretBinary'])
 
 
-def get_ecs_job_config(job_name, rupture_set_id, config, toshi_api_url, toshi_s3_url, time_minutes, memory, vcpu):
+def get_ecs_job_config(job_name, toshi_file_id, config, toshi_api_url, toshi_s3_url, toshi_report_bucket, task_module, time_minutes, memory, vcpu):
 
     assert vcpu in  [0.25, 0.5, 1, 2, 4]
     assert memory in [
@@ -92,10 +92,6 @@ def get_ecs_job_config(job_name, rupture_set_id, config, toshi_api_url, toshi_s3
                     "value": urllib.parse.quote(json.dumps(config))
                 },
                 {
-                    "name": "TOSHI_RUPTURE_SET_ID",
-                    "value": rupture_set_id
-                },
-                {
                     "name": "NZSHM22_SCRIPT_JVM_HEAP_MAX",
                     "value": str(int(memory/1000))
                 },
@@ -107,7 +103,22 @@ def get_ecs_job_config(job_name, rupture_set_id, config, toshi_api_url, toshi_s3
                     "name": "NZSHM22_TOSHI_API_URL",
                     "value": toshi_api_url
                 },
-
+                {
+                    "name": "NZSHM22_S3_REPORT_BUCKET",
+                    "value": toshi_report_bucket
+                },
+                {
+                    "name": "TOSHI_FILE_ID",
+                    "value": toshi_file_id
+                },
+                {
+                    "name": "PYTHON_PREP_MODULE",
+                    "value": 'runzi.execute.prepare_inputs'
+                },
+                {
+                    "name": "PYTHON_TASK_MODULE",
+                    "value": task_module
+                }
             ]
         },
         "propagateTags": True,
@@ -115,5 +126,3 @@ def get_ecs_job_config(job_name, rupture_set_id, config, toshi_api_url, toshi_s3
             "attemptDurationSeconds": (time_minutes * 60) + 1800
         }
     }
-
-

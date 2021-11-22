@@ -1,4 +1,5 @@
 # created by virtualenv automatically
+__pycache__/
 **.py[cod]
 **.jar
 bin/**
@@ -7,4 +8,6 @@ pyvenv.cfg
 share/**
 **.egg-info/**
 runzi/cli/config/saved_configs/**
-runzi/cli/**/__pycache__/**
+shell/**
+tmp/**
+**/.DS_Store

@@ -62,6 +62,8 @@ def display(obj):
     job_args = {k[1:] : v for k, v in obj.get_job_args().items()}
     pprint_color(job_args)
 
+
+
 class MenuHandler():
 
     def __init__(self, menu_context, options=None, exit_options=None):

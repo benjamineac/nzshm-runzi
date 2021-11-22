@@ -1,20 +1,31 @@
 import argparse
 import json
+from runzi.automation.scaling.local_config import S3_REPORT_BUCKET, WORK_PATH
 import git
 import os
 import base64
 from pathlib import PurePath, Path
 import platform
+import urllib
 
+from runzi.util.build_named_fault_mfd_index import build_named_fault_mfd_index
 from py4j.java_gateway import JavaGateway, GatewayParameters
 import datetime as dt
 from dateutil.tz import tzutc
+from runzi.util.aws import get_secret
+from runzi.util.aws.s3_folder_upload import upload_to_bucket
 
 import time
 
 API_URL  = os.getenv('NZSHM22_TOSHI_API_URL', "http://127.0.0.1:5000/graphql")
 API_KEY = os.getenv('NZSHM22_TOSHI_API_KEY', "")
 S3_URL = os.getenv('NZSHM22_TOSHI_S3_URL',"http://localhost:4569")
+
+#Get API key from AWS secrets manager
+if 'TEST' in API_URL.upper():
+    API_KEY = get_secret("NZSHM22_TOSHI_API_SECRET_TEST", "us-east-1").get("NZSHM22_TOSHI_API_KEY_TEST")
+elif 'PROD' in API_URL.upper():
+    API_KEY = get_secret("NZSHM22_TOSHI_API_SECRET_PROD", "us-east-1").get("NZSHM22_TOSHI_API_KEY_PROD")
 
 class BuilderTask():
     """
@@ -28,7 +39,7 @@ class BuilderTask():
         self._gateway = JavaGateway(gateway_parameters=GatewayParameters(port=job_args['java_gateway_port']))
         self._report_builder = self._gateway.entry_point.getInversionDiagnosticsReportBuilder()
         self._page_gen = self._gateway.entry_point.getReportPageGen()
-        self._output_folder = PurePath(job_args.get('working_path'))
+        self._output_folder = PurePath(WORK_PATH)
 
     def run(self, task_arguments, job_arguments):
         # Run the task....
@@ -112,9 +123,14 @@ if __name__ == "__main__":
     parser.add_argument("config")
     args = parser.parse_args()
 
-    config_file = args.config
-    f= open(config_file, 'r', encoding='utf-8')
-    config = json.load(f)
+    try:
+        # LOCAL and CLUSTER this is a file
+        config_file = args.config
+        f= open(args.config, 'r', encoding='utf-8')
+        config = json.load(f)
+    except:
+        # for AWS this must be a quoted JSON string
+        config = json.loads(urllib.parse.unquote(args.config))
 
     # maybe the JVM App is a little slow to get listening
     time.sleep(5)
@@ -124,3 +140,6 @@ if __name__ == "__main__":
     # print(config)
     task = BuilderTask(config['job_arguments'])
     task.run(**config)
+    build_named_fault_mfd_index()
+    upload_to_bucket(config['task_arguments']['file_id'], S3_REPORT_BUCKET)
+

@@ -15,7 +15,7 @@ def get_output_file_ids(general_task_api, upstream_task_id, file_extension='zip'
         #get rupture set fault model
         fault_model = ""
         for filenode in subtask['node']['child']['files']['edges']:
-            print("FN:", filenode)
+            # print("FN:", filenode)
             if filenode['node']['role'] == 'READ' and filenode['node']['file']['file_name'][-3:] == file_extension:
                 for kv in filenode['node']['file'].get('meta', []):
                     if kv.get('k') == 'fault_model':
@@ -77,7 +77,7 @@ def get_download_info(file_api, file_infos):
         yield dict(dict(file_url=api_result['file_url']), **itm) #merge the discts
 
 
-def download_files(file_api, file_generator, dest_folder, id_suffix=False, overwrite=False, skip_existing=False):
+def download_files(file_api, file_generator, dest_folder, id_suffix=False, overwrite=False, skip_existing=False, skip_download=False):
     """
     file_generator = get_output_file_ids(general_api, upstream_task_id) # for files by upstream task ID)
 
@@ -107,6 +107,10 @@ def download_files(file_api, file_generator, dest_folder, id_suffix=False, overw
 
         if not overwrite and os.path.isfile(file_path):
             print(f"Skip DL for existing file: {file_path}")
+            continue
+
+        if skip_download:
+            print("Skipping download -> aws mode")
             continue
 
         # here we pull the file

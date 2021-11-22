@@ -17,7 +17,7 @@ from .scaling.toshi_api import ToshiApi, CreateGeneralTaskArgs
 from .scaling.opensha_task_factory import OpenshaTaskFactory
 from .scaling.file_utils import download_files, get_output_file_id, get_output_file_ids
 
-from .scaling import inversion_solution_builder_task
+from runzi.execute import inversion_solution_builder_task
 
 # Set up your local config, from environment variables, with some sone defaults
 from .scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,

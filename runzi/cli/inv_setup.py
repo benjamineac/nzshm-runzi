@@ -4,8 +4,8 @@ from termcolor import cprint
 from runzi.cli.cli_helpers import unique_id
 from prompt_toolkit import prompt 
 import inquirer
-from config.inversion_builder import CrustalConfig, SubductionConfig
-from cli_helpers import NumberValidator, display
+from runzi.cli.config.inversion_builder import CrustalConfig, SubductionConfig
+from runzi.cli.cli_helpers import NumberValidator, display
 from datetime import date
 
 def base_config():
