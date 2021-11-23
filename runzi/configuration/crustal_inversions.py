@@ -52,7 +52,7 @@ def build_crustal_tasks(general_task_id, rupture_sets, args):
                 non_negativity_function, perturbation_function,
                 deformation_model,
                 scaling_relationship, scaling_recalc_mag,
-                paleo_constraint_weight, paleo_rate_constraint,
+                paleo_rate_constraint_weight, paleo_rate_constraint,
                 paleo_probability_model
                 )\
             in itertools.product(
@@ -67,7 +67,7 @@ def build_crustal_tasks(general_task_id, rupture_sets, args):
                 args['non_negativity_function'], args['perturbation_function'],
                 args['deformation_models'],
                 args['scaling_relationships'], args['scaling_recalc_mags'],
-                args['paleo_constraint_weights'], args['paleo_rate_constraints'],
+                args['paleo_rate_constraint_weights'], args['paleo_rate_constraints'],
                 args['paleo_probability_models']
                 ):
 
@@ -107,7 +107,7 @@ def build_crustal_tasks(general_task_id, rupture_sets, args):
                 scaling_recalc_mag=scaling_recalc_mag,
 
                 #New Paleo Args...
-                paleo_constraint_weight=paleo_constraint_weight,
+                paleo_rate_constraint_weight=paleo_rate_constraint_weight,
                 paleo_rate_constraint=paleo_rate_constraint,
                 paleo_probability_model=paleo_probability_model
                 )
