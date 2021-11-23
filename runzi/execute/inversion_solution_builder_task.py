@@ -118,7 +118,7 @@ class BuilderTask():
             if ta.get('paleo_constraint_weight', 0):
                 inversion_runner.setPaleoConstraints(
                     float(ta['paleo_constraint_weight']),
-                    ta['paleo_rate_constraints'],
+                    ta['paleo_rate_constraint'],
                     ta['paleo_probability_model'])
 
         elif ta['config_type'] == 'subduction':
