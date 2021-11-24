@@ -121,7 +121,6 @@ class BuilderTask():
                     float(ta['paleo_parent_rate_smoothness_constraint_weight']),
                     ta['paleo_rate_constraint'],
                     ta['paleo_probability_model'])
-)
 
         elif ta['config_type'] == 'subduction':
             inversion_runner = self._gateway.entry_point.getSubductionInversionRunner()
