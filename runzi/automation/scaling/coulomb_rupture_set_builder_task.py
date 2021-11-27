@@ -14,6 +14,8 @@ from dateutil.tz import tzutc
 from nshm_toshi_client.rupture_generation_task import RuptureGenerationTask
 from nshm_toshi_client.general_task import GeneralTask
 from nshm_toshi_client.task_relation import TaskRelation
+
+
 import time
 
 CLUSTER_MODE = os.getenv('NZSHM22_SCRIPT_CLUSTER_MODE', False)
@@ -102,7 +104,10 @@ class RuptureSetBuilderTask():
             .setFaultModel(ta["fault_model"])
 
         #name the output file
-        outputfile = self._output_folder.joinpath(self._builder.getDescriptiveName()+ ".zip")
+        if self.use_api:
+            outputfile = self._output_folder.joinpath(f"NZSHM22_RuptureSet-{task_id}.zip")
+        else:
+            outputfile = self._output_folder.joinpath(self._builder.getDescriptiveName()+ ".zip")
         print("building %s started at %s" % (outputfile, dt.datetime.utcnow().isoformat()), end=' ')
 
         self._builder \
@@ -114,7 +119,7 @@ class RuptureSetBuilderTask():
         metrics = self.ruptureSetMetrics()
 
         #write the result
-        self._builder .writeRuptureSet(str(outputfile))
+        self._builder.writeRuptureSet(str(outputfile))
 
         if self.use_api:
             #record the completed task
@@ -157,9 +162,10 @@ if __name__ == "__main__":
     f= open(config_file, 'r', encoding='utf-8')
     config = json.load(f)
 
+    # maybe the JVM App is a little slow to get listening
+    time.sleep(5)
     if CLUSTER_MODE:
-        # maybe the JVM App is a little slow to get listening
-        time.sleep(5)
+
         # Wait for some more time, scaled by taskid to avoid S3 consistency issue
         time.sleep(config['job_arguments']['task_id'] * 5)
 

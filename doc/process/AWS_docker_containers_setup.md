@@ -32,6 +32,64 @@ $ docker push 461564345538.dkr.ecr.us-east-1.amazonaws.com/nzshm22/runzi-opensha
 $ aws batch submit-job --cli-input-json "$(<task-specs/job-submit-002.json)"
 ```
 
+## New Build (with gitref-tagging)
+
+ - nzshm-opensha
+    - push any changes
+    - build fatjar
+    - get gitrefs
+ - runzi
+    - push any changes
+    - get gitrefs
+
+### Build new container with no tag, forcing git pull etc
+```
+docker build . --no-cache
+```
+
+### Tag new docker image
+
+```
+export RUNZI_GITREF=416f67a
+export NZOPENSHA_GITREF=16f0777
+export IMAGE_ID=f928d16ad940 #from docker build
+export CONTAINER_TAG=runzi-${RUNZI_GITREF}_nzshm-opensha-${NZOPENSHA_GITREF}
+
+docker tag ${IMAGE_ID} 461564345538.dkr.ecr.us-east-1.amazonaws.com/nzshm22/runzi-opensha:${CONTAINER_TAG}
+```
+
+### get credential, push image into AWS ECR
+
+```
+$(aws ecr get-login --no-include-email --region us-east-1)
+docker push 461564345538.dkr.ecr.us-east-1.amazonaws.com/nzshm22/runzi-opensha:${CONTAINER_TAG}
+```
+
+### Update AWS Job Defintion with ${CONTAINER_TAG}
+
+
+### RUN ....
+
+This assumes the command is being run from the folder containing `Dockerfile`
+
+```
+# setcorrect environment
+set_tosh_test_env
+
+```
+
+```
+docker run -it --rm --env-file environ \
+-v $HOME/.aws/credentials:/root/.aws/credentials:ro \
+-v $(pwd)/../../runzi/cli/config/saved_configs:/app/nzshm-runzi/runzi/cli/config/saved_configs \
+-e AWS_PROFILE=toshi_batch_devops \
+-e NZSHM22_TOSHI_S3_URL \
+-e NZSHM22_TOSHI_API_URL \
+-e NZSHM22_SCRIPT_CLUSTER_MODE \
+-e NZSHM22_S3_REPORT_BUCKET \
+-e NZSHM22_REPORT_LEVEL=FULL \
+461564345538.dkr.ecr.us-east-1.amazonaws.com/nzshm22/runzi-opensha:${CONTAINER_TAG}
+```
 
 ### Batch setup
 
