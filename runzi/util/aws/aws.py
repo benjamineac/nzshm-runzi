@@ -96,6 +96,10 @@ def get_ecs_job_config(job_name, toshi_file_id, config, toshi_api_url, toshi_s3_
                     "value": str(int(memory/1000))
                 },
                 {
+                    "name": "NZSHM22_AWS_JAVA_THREADS",
+                    "value": str(int(vcpu))
+                },
+                {
                     "name": "NZSHM22_TOSHI_S3_URL",
                     "value": toshi_s3_url
                 },
