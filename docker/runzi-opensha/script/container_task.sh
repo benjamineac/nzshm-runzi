@@ -17,3 +17,17 @@ python3 -m ${PYTHON_TASK_MODULE} ${TASK_CONFIG_JSON_QUOTED} > ${NZSHM22_SCRIPT_W
 kill -9 $!
 
 #END_OF_SCRIPT
+
+
+export PATH=/opt/java/openjdk/bin/java:$PATH
+export JAVA_CLASSPATH=/app/nzshm-opensha/build/libs/nzshm-opensha-all.jar
+export CLASSNAME=nz.cri.gns.NZSHM22.opensha.util.NZSHM22_PythonGateway
+export NZSHM22_APP_PORT=26533
+
+cd /app
+java -Xms4G -Xmx10G -XX:-UseContainerSupport -classpath ${JAVA_CLASSPATH} ${CLASSNAME} > /WORKING/java_app.26533.log &
+python3 /app/nzshm-runzi/runzi/execute/inversion_diags_report_task.py /WORKING/config.26533.json > /WORKING/python_script.26533.log
+
+#Kill the Java gateway server
+kill -9 $!
+~
