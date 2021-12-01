@@ -115,7 +115,7 @@ class BuilderTask():
                     float(ta['slip_rate_normalized_weight']),
                     float(ta['slip_rate_unnormalized_weight']))
 
-            if ta.get('paleo_constraint_weight', 0):
+            if ta.get('paleo_rate_constraint_weight', 0):
                 inversion_runner.setPaleoRateConstraints(
                     float(ta['paleo_rate_constraint_weight']),
                     float(ta['paleo_parent_rate_smoothness_constraint_weight']),

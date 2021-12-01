@@ -27,8 +27,7 @@ def run_tasks(general_task_id, solutions, subtask_arguments):
     task_count = 0
     task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, scaling.inversion_hazard_report_task,
         jre_path=OPENSHA_JRE, app_jar_path=FATJAR,
-        task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START,
-        pbs_script=CLUSTER_MODE)
+        task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START)
 
     # def run_subtask(forecast_timespans, bg_seismicitys, iml_periods, gmpes):
     #     print ( forecast_timespans, bg_seismicitys, iml_periods, gmpes )
@@ -82,7 +81,7 @@ if __name__ == "__main__":
 
     GENERAL_TASK_ID = None
     # If you wish to override something in the main config, do so here ..
-    WORKER_POOL_SIZE = 1
+    WORKER_POOL_SIZE = 2
     JVM_HEAP_MAX = 22
     JAVA_THREADS = 12
     #USE_API = False #True #to read the ruptset form the API
@@ -106,7 +105,7 @@ if __name__ == "__main__":
     args = dict(
         #iml_periods = "0.0, 0.05, 0.075, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 7.5, 10.0".split(',').join(),
         iml_periods = [v.strip() for v in "0.0, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0".split(',')],
-        bg_seismicitys = ["INCLUDE", "EXCLUDE"],
+        bg_seismicitys = ["EXCLUDE"],
         gmpes = ["ASK_2014"],
         forecast_timespans = ['50'],
         grid_spacings = ['0.1'],
@@ -118,7 +117,7 @@ if __name__ == "__main__":
     #"R2VuZXJhbFRhc2s6NTk2SmJXZUI="
     #"R2VuZXJhbFRhc2s6NzU0cGp4c1c="
     #"R2VuZXJhbFRhc2s6NzU2andXeTc=",
-    for inversion_task_id in ["R2VuZXJhbFRhc2s6MTIzN1NFQWtz"]: # R2VuZXJhbFRhc2s6NjMyUzRDZGM="]: #TEST Inversion
+    for inversion_task_id in ["R2VuZXJhbFRhc2s6NTQ5N2NZOFU4"]: # R2VuZXJhbFRhc2s6NjMyUzRDZGM="]: #TEST Inversion
 
         file_generator = get_output_file_ids(toshi_api, inversion_task_id) #
         #file_generator = get_output_file_id(toshi_api, "RmlsZTozMDkuMHB3U0dn") #for file by file ID

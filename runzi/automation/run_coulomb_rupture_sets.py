@@ -9,11 +9,11 @@ from multiprocessing.dummy import Pool
 import datetime as dt
 from dateutil.tz import tzutc
 
-from nshm_toshi_client.general_task import GeneralTask
-from scaling.opensha_task_factory import OpenshaTaskFactory
-import scaling.azimuthal_rupture_set_builder_task
-import scaling.coulomb_rupture_set_builder_task
+# from nshm_toshi_client.general_task import GeneralTask
+from runzi.automation.scaling.toshi_api import ToshiApi, CreateGeneralTaskArgs
 
+from runzi.automation.scaling.opensha_task_factory import get_factory
+from runzi.automation.scaling import coulomb_rupture_set_builder_task
 
 # Set up your local config, from environment variables, with some sone defaults
 from scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
@@ -22,40 +22,48 @@ from scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
 
 # If you wish to override something in the main config, do so here ..
 WORKER_POOL_SIZE = 1
-JVM_HEAP_MAX = 42
-JAVA_THREADS = 12
+JVM_HEAP_MAX = 58
+JAVA_THREADS = 16
+INITIAL_GATEWAY_PORT = 26533 #set this to ensure that concurrent scheduled tasks won't clash
 
 #If using API give this task a descriptive setting...
-TASK_TITLE = "Build Coulomb Stirling CFM 0.9 D90 ruptset"
+TASK_TITLE = "Build Coulomb CFM 0.9A D90 ruptsets for new experiments"
 
 TASK_DESCRIPTION = """
-
- - models = [CFM_0_9_SANSTVZ_D90,]
-
+ - saved using simplified (non-descriptive) a file naming.
+ - saved in non-modular, U3-style archive format.
+ - simliar setup toRmlsZTozMDMuMEJCOVVY, but with the slimmed-down 9A Fault Model.
 """
- # - jump_limits = [15,]
- # - adaptive_min_distances = [6,]
- # - thinning_factors = [0.0,0.1,0.2]
- # - min_sub_sects_per_parents = [2,]
- # - min_sub_sections = [2,3,4,5]
 
 
-def build_tasks(general_task_id, models, min_sub_sects_per_parents, min_sub_sections_list, jump_limits, adaptive_min_distances, thinning_factors,
-            max_sections = 1000):
+def build_tasks(general_task_id, args):
     """
     build the shell scripts 1 per task, based on all the inputs
 
     """
     task_count = 0
-    task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, scaling.coulomb_rupture_set_builder_task,
-        initial_gateway_port=25733,
-        jre_path=OPENSHA_JRE, app_jar_path=FATJAR,
-        task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START,
-        pbs_ppn=JAVA_THREADS,
-        pbs_script=CLUSTER_MODE)
+    factory_class = get_factory(CLUSTER_MODE)
 
-    for (model, min_sub_sects_per_parent, min_sub_sections, max_jump_distance, adaptive_min_distance, thinning_factor) in itertools.product(
-            models, min_sub_sects_per_parents, min_sub_sections_list, jump_limits, adaptive_min_distances, thinning_factors):
+    task_factory = factory_class(OPENSHA_ROOT, WORK_PATH, coulomb_rupture_set_builder_task,
+        initial_gateway_port=INITIAL_GATEWAY_PORT,
+        jre_path=OPENSHA_JRE, app_jar_path=FATJAR,
+        task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START)
+
+    # task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, scaling.coulomb_rupture_set_builder_task,
+    #     initial_gateway_port=25733,
+    #     jre_path=OPENSHA_JRE, app_jar_path=FATJAR,
+    #     task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START)
+
+    for ( model, min_sub_sects_per_parent,
+            min_sub_sections, max_jump_distance,
+            adaptive_min_distance, thinning_factor,
+            max_sections )\
+            in itertools.product(
+                args['models'], args['min_sub_sects_per_parents'],
+                args['min_sub_sections_list'], args['jump_limits'],
+                args['adaptive_min_distances'], args['thinning_factors'],
+                args['max_sections']
+                ):
 
         task_count +=1
 
@@ -98,7 +106,7 @@ def build_tasks(general_task_id, models, min_sub_sects_per_parents, min_sub_sect
         yield str(script_file_path)
 
         #testing
-        return
+        #return
 
 
 if __name__ == "__main__":
@@ -108,37 +116,46 @@ if __name__ == "__main__":
     #USE_API = False
     GENERAL_TASK_ID = None
 
+    #limit test size, nomally 1000 for NZ CFM
+    MAX_SECTIONS = 2000
+
+    args = dict(
+        ##Test parameters
+        models = ["CFM_0_9A_SANSTVZ_D90"], #, "CFM_0_9_ALL_D90","CFM_0_9_SANSTVZ_2010"]
+        jump_limits = [15], #default is 15
+        adaptive_min_distances = [6,], #9] default is 6
+        thinning_factors = [0,], #5, 0.1, 0.2, 0.3] #, 0.05, 0.1, 0.2]
+        min_sub_sects_per_parents = [2], #3,4,5]
+        min_sub_sections_list = [2],
+        max_sections=[MAX_SECTIONS],
+    )
+
+    args_list = []
+    for key, value in args.items():
+        args_list.append(dict(k=key, v=value))
+
     if USE_API:
-        headers={"x-api-key":API_KEY}
-        general_api = GeneralTask(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
         #create new task in toshi_api
-        GENERAL_TASK_ID = general_api.create_task(
-            created=dt.datetime.now(tzutc()).isoformat(),
+        headers={"x-api-key":API_KEY}
+        toshi_api = ToshiApi(API_URL, S3_URL, None, with_schema_validation=True, headers=headers)
+
+        gt_args = CreateGeneralTaskArgs(
             agent_name=pwd.getpwuid(os.getuid()).pw_name,
             title=TASK_TITLE,
             description=TASK_DESCRIPTION
-        )
+            )\
+            .set_argument_list(args_list)\
+            .set_subtask_type('RUPTURE_SET')\
+            .set_model_type('CRUSTAL')
+        GENERAL_TASK_ID = toshi_api.general_task.create_task(gt_args)
 
         print("GENERAL_TASK_ID:", GENERAL_TASK_ID)
 
-    ##Test parameters
-    models = ["CFM_0_9_SANSTVZ_D90",] #, "CFM_0_9_ALL_D90","CFM_0_9_SANSTVZ_2010"]
-    jump_limits = [15,] #default is 15
-    adaptive_min_distances = [6,] #9] default is 6
-    thinning_factors = [0.2] #5, 0.1, 0.2, 0.3] #, 0.05, 0.1, 0.2]
-    min_sub_sects_per_parents = [2,] #3,4,5]
-    min_sub_sections_list = [2]
-
-    #limit test size, nomally 1000 for NZ CFM
-    MAX_SECTIONS = 2000
 
     pool = Pool(WORKER_POOL_SIZE)
 
     scripts = []
-    for script_file in build_tasks(GENERAL_TASK_ID,
-        models, min_sub_sects_per_parents, min_sub_sections_list,
-        jump_limits, adaptive_min_distances,
-        thinning_factors,  MAX_SECTIONS):
+    for script_file in build_tasks(GENERAL_TASK_ID, args):
         scripts.append(script_file)
 
     def call_script(script_name):
