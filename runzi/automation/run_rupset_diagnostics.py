@@ -26,9 +26,9 @@ from scaling.local_config import (OPENSHA_ROOT, WORK_PATH, OPENSHA_JRE, FATJAR,
 
 # If you wish to override something in the main config, do so here ..
 # WORKER_POOL_SIZE = 3
-WORKER_POOL_SIZE = 2
-JVM_HEAP_MAX = 12
-JAVA_THREADS = 6
+WORKER_POOL_SIZE = 1
+JVM_HEAP_MAX = 16
+JAVA_THREADS = 12
 USE_API = True #to read the ruptset form the API
 
 
@@ -43,8 +43,7 @@ def run_tasks(general_task_id, rupture_sets):
     task_count = 0
     task_factory = OpenshaTaskFactory(OPENSHA_ROOT, WORK_PATH, scaling.ruptset_diags_report_task,
         jre_path=OPENSHA_JRE, app_jar_path=FATJAR,
-        task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START,
-        pbs_script=CLUSTER_MODE)
+        task_config_path=WORK_PATH, jvm_heap_max=JVM_HEAP_MAX, jvm_heap_start=JVM_HEAP_START)
 
     for (rid, rupture_set_info) in rupture_sets.items():
 
@@ -102,7 +101,7 @@ if __name__ == "__main__":
         #upstream_task_id = "R2VuZXJhbFRhc2s6NzIybjVvc0I=" ## test 2
         upstream_task_id = "R2VuZXJhbFRhc2s6Mjg5NVpXNUZQ" ## PROD
         #upstream_task_id = "R2VuZXJhbFRhc2s6MTA0OXFKNWRQ" ## TEST
-        upstream_task_id = "R2VuZXJhbFRhc2s6MzIyNTVqQmlF"
+        upstream_task_id = "R2VuZXJhbFRhc2s6NTQyMXJma2pB"
 
         """
         CHOOSE ONE OF:
