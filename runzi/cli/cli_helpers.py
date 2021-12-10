@@ -21,7 +21,7 @@ from termcolor import cprint
 import inquirer
 from runzi.automation.build_manual_index import build_manual_index
 
-from runzi.automation.scaling.local_config import (WORK_PATH, CLUSTER_MODE, API_URL, EnvMode)
+from runzi.automation.scaling.local_config import (JAVA_THREADS, JVM_HEAP_MAX, JVM_HEAP_START, S3_URL, S3_UPLOAD_WORKERS, USE_API, WORKER_POOL_SIZE, WORK_PATH, CLUSTER_MODE, API_URL, S3_REPORT_BUCKET, EnvMode)
 
 def landing_banner():
 
@@ -171,6 +171,34 @@ class NumberValidator(Validator):
 def build_inversion_index(*args):
     build_inversion_index_query()
 
+
+    
+def display_env(*args):
+    cprint(f'NZSHM22_SCRIPT_WORK_PATH:', 'cyan', end=' ')
+    cprint(WORK_PATH, 'magenta')
+    cprint(f'USE_API:', 'cyan', end=' ')
+    cprint(USE_API, 'magenta')
+    cprint(f'NZSHM22_TOSHI_API_URL:', 'cyan', end=' ')
+    cprint(API_URL, 'magenta')
+    cprint(f'NZSHM22_TOSHI_S3_URL:', 'cyan', end=' ')
+    cprint(S3_URL, 'magenta')
+    cprint(f'NZSHM22_SCRIPT_CLUSTER_MODE:', 'cyan', end=' ')
+    cprint(CLUSTER_MODE.name, 'magenta')
+    cprint(f'NZSHM22_S3_REPORT_BUCKET:', 'cyan', end=' ')
+    cprint(S3_REPORT_BUCKET, 'magenta')
+    cprint(f'NZSHM22_S3_UPLOAD_WORKERS:', 'cyan', end=' ')
+    cprint(S3_UPLOAD_WORKERS, 'magenta')
+    cprint(f'NZSHM22_SCRIPT_JAVA_THREADS:', 'cyan', end=' ')
+    cprint(JAVA_THREADS, 'magenta')
+    cprint(f'NZSHM22_SCRIPT_JVM_HEAP_START:', 'cyan', end=' ')
+    cprint(JVM_HEAP_START, 'magenta')
+    cprint(f'NZSHM22_SCRIPT_JVM_HEAP_MAX:', 'cyan', end=' ')
+    cprint(JVM_HEAP_MAX, 'magenta')
+    cprint(f'NZSHM22_SCRIPT_WORKER_POOL_SIZE:', 'cyan', end=' ')
+    cprint(WORKER_POOL_SIZE, 'magenta')
+
+    
+
 def build_inversion_index_query():
     general_tasks = inquirer.text('General Task ID - for multiple put a space between each')
     general_task_list = general_tasks.split(' ')
@@ -184,3 +212,4 @@ def build_inversion_index_query():
                 build_manual_index(gt, 'INVERSION', True)
         else:
             return
+
