@@ -45,18 +45,20 @@ $ aws batch submit-job --cli-input-json "$(<task-specs/job-submit-002.json)"
 
 
 ### Build new container with no tag, forcing git pull etc
+
 ```
-docker build . --no-cache
+export FATJAR_TAG=95-modular-hazard
+docker build . --build-arg FATJAR_TAG=${FATJAR_TAG} --no-cache
 ```
 
 ### Tag new docker image
 
 ```
-export RUNZI_GITREF=cd7a072
-export NZOPENSHA_GITREF=25fd82e
-export OPENSHA_GITREF=da915e2
-export IMAGE_ID=99419a927193 #from docker build
-export CONTAINER_TAG=runzi-${RUNZI_GITREF}_nz_opensha-${NZOPENSHA_GITREF}_opensha-${OPENSHA_GITREF}
+
+export RUNZI_GITREF=7ff3e1e
+export NZOPENSHA_GITREF=${FATJAR_TAG}
+export IMAGE_ID=e31137aa8e4e #from docker build
+export CONTAINER_TAG=runzi-${RUNZI_GITREF}_nz_opensha-${NZOPENSHA_GITREF}
 
 docker tag ${IMAGE_ID} 461564345538.dkr.ecr.us-east-1.amazonaws.com/nzshm22/runzi-opensha:${CONTAINER_TAG}
 ```
@@ -85,6 +87,7 @@ set_tosh_test_env
 # -v $HOME/DEV/GNS/AWS_S3_DATA/WORKING:/WORKING \
 
 docker run -it --rm --env-file environ \
+-v $HOME/DEV/GNS/AWS_S3_DATA/WORKING:/WORKING \
 -v $HOME/.aws/credentials:/root/.aws/credentials:ro \
 -v $(pwd)/../../runzi/cli/config/saved_configs:/app/nzshm-runzi/runzi/cli/config/saved_configs \
 -e AWS_PROFILE=toshi_batch_devops \
@@ -93,6 +96,7 @@ docker run -it --rm --env-file environ \
 -e NZSHM22_SCRIPT_CLUSTER_MODE \
 -e NZSHM22_S3_REPORT_BUCKET \
 -e NZSHM22_REPORT_LEVEL=FULL \
+-e NZSHM22_FATJAR=/app/nzshm-opensha/build/libs/nzshm-opensha-all-${FATJAR_TAG}.jar \
 461564345538.dkr.ecr.us-east-1.amazonaws.com/nzshm22/runzi-opensha:${CONTAINER_TAG}
 ```
 
