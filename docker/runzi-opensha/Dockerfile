@@ -8,6 +8,7 @@ ARG FATJAR_TAG
 WORKDIR /app/nzshm-opensha/build/libs
 ADD https://nzshm-opensha-public-jars.s3.ap-southeast-2.amazonaws.com/nzshm-opensha-all-${FATJAR_TAG}.jar .
 
+
 WORKDIR /WORKING
 WORKDIR /app
 
@@ -17,8 +18,7 @@ RUN git clone https://github.com/GNS-Science/nzshm-runzi.git
 
 WORKDIR /app/nzshm-runzi
 RUN git fetch
-
-# RUN git checkout feature/41_task_index_list_input
+RUN git checkout feature/49_create_openquake_source-model_from_solution
 
 RUN pip3 install -r requirements.txt
 RUN pip3 install -e .
