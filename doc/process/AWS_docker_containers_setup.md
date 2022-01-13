@@ -47,17 +47,16 @@ $ aws batch submit-job --cli-input-json "$(<task-specs/job-submit-002.json)"
 ### Build new container with no tag, forcing git pull etc
 
 ```
-export FATJAR_TAG=95-modular-hazard
+#EG export FATJAR_TAG=95-modular-hazard
 docker build . --build-arg FATJAR_TAG=${FATJAR_TAG} --no-cache
 ```
 
 ### Tag new docker image
 
 ```
-export RUNZI_GITREF=7ff3e1e
-export NZOPENSHA_GITREF=${FATJAR_TAG}
-export IMAGE_ID=e31137aa8e4e #from docker build
-export CONTAINER_TAG=runzi-${RUNZI_GITREF}_nz_opensha-${NZOPENSHA_GITREF}
+export RUNZI_GITREF=b406f4f
+export IMAGE_ID=e84a0ad0b305 #from docker build
+export CONTAINER_TAG=runzi-${RUNZI_GITREF}_nz_opensha-${FATJAR_TAG}
 
 docker tag ${IMAGE_ID} 461564345538.dkr.ecr.us-east-1.amazonaws.com/nzshm22/runzi-opensha:${CONTAINER_TAG}
 ```
@@ -79,14 +78,27 @@ This assumes the command is being run from the folder containing `Dockerfile`
 ```
 # setcorrect environment
 set_tosh_test_env
+```
+
+### Local cli testing
+
+```
+wget https://nzshm-opensha-public-jars.s3.ap-southeast-2.amazonaws.com/nzshm-opensha-all-${FATJAR_TAG}.jar -P $(pwd)/nzshm-opensha/build/libs
+export NZSHM22_FATJAR=$(pwd)/nzshm-opensha/build/libs/nzshm-opensha-all-${FATJAR_TAG}.jar
+NZSHM22_SCRIPT_CLUSTER_MODE=LOCAL python3 ../../runzi/cli/cli.py
+```
+
+### AWS or Dockerised run
+
+run the docker container...
+ - use LOCAL to run on local docker host
+ - use AWS to run on AWS Batch
 
 ```
 
-```
 # -v $HOME/DEV/GNS/AWS_S3_DATA/WORKING:/WORKING \
 
 docker run -it --rm --env-file environ \
--v $HOME/DEV/GNS/AWS_S3_DATA/WORKING:/WORKING \
 -v $HOME/.aws/credentials:/root/.aws/credentials:ro \
 -v $(pwd)/../../runzi/cli/config/saved_configs:/app/nzshm-runzi/runzi/cli/config/saved_configs \
 -e AWS_PROFILE=toshi_batch_devops \
