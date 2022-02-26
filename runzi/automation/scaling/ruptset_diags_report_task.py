@@ -47,7 +47,7 @@ class BuilderTask():
         diags_folder.mkdir(parents=True, exist_ok=True)
 
         # # build the full report
-        report_title = f"Rupture Set Diagnostics. Rupset ID: {ta['rupture_set_file_id']}"
+        report_title = f"Rupture Set Diagnostics: {ta['rupture_set_file_id']}"
 
         self._page_gen\
             .setRuptureSet(ta['rupture_set_file_path'])\

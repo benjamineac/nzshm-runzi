@@ -53,14 +53,11 @@ class BuilderTask():
 
         initial_solution_id = ta.get('initial_solution_id')
         if initial_solution_id:
-            file_generator = get_output_file_id(self._toshi_api , initial_solution_id)
+            file_generator = get_output_file_id(self._toshi_api, initial_solution_id)
             initial_solution_info = download_files(self._toshi_api , file_generator, str(WORK_PATH), overwrite=False)
 
         environment = {
             "host": platform.node(),
-            #"gitref_opensha":self._repoheads['opensha'],
-            #"gitref_nzshm-opensha":self._repoheads['nzshm-opensha'],
-            #"gitref_nzshm-runzi":self._repoheads['nzshm-runzi']
             "nzshm-opensha.version": API_GitVersion
             }
 
@@ -105,13 +102,19 @@ class BuilderTask():
                     float(ta['mfd_equality_weight']),
                     float(ta['mfd_inequality_weight']))
 
-            #set both the same for now
-            minMagSans = minMagTvz = float(ta['seismogenic_min_mag'])
+            minMagSans = float(ta['min_mag_sans'])
+            minMagTvz = float(ta['min_mag_tvz'])
             inversion_runner.setMinMags(minMagSans, minMagTvz)
+
+            maxMagSans = float(ta['max_mag_sans'])
+            maxMagTvz = float(ta['max_mag_tvz'])
+            maxMagType = ta['max_mag_type']
+            inversion_runner.setMaxMags(maxMagType,maxMagSans,maxMagTvz)
+            inversion_runner.setTVZSlipRateFactor(float(ta['tvz_slip_rate_factor']))
+
 
             if ta['slip_rate_weighting_type'] == 'UNCERTAINTY_ADJUSTED':
                 inversion_runner.setSlipRateUncertaintyConstraint(
-                    ta['slip_rate_weighting_type'],
                     int(float(ta['slip_rate_weight'])),
                     int(ta['slip_uncertainty_scaling_factor']))
             else:
@@ -173,6 +176,9 @@ class BuilderTask():
                 int(ta["averaging_threads"]),
                 int(ta["averaging_interval_secs"]))
 
+        if ta.get('cooling_schedule'):
+            inversion_runner.setCoolingSchedule(ta['cooling_schedule'])
+
         #int(ta['max_inversion_time'] * 60))\
 
         print("Starting inversion of up to %s minutes" % ta['max_inversion_time'])
@@ -203,7 +209,10 @@ class BuilderTask():
         # metrics['by_fault_name'] = inversion_runner.byFaultNameMetrics()
         # metrics['parent_fault_moment_rates'] = inversion_runner.parentFaultMomentRates()
 
-        table_rows = inversion_runner.getTabularSolutionMfds()
+        table_rows_v1 = inversion_runner.getTabularSolutionMfds()
+        table_rows_v2 = inversion_runner.getTabularSolutionMfdsV2() # not in current opensha build
+        mfd_table_rows = {"MFD_CURVES":table_rows_v1, "MFD_CURVES_V2":table_rows_v2}
+        #mfd_table_rows = {"MFD_CURVES":table_rows_v1}
 
         if self.use_api:
             #record the completed task
@@ -227,28 +236,29 @@ class BuilderTask():
             print("created inversion solution: ", inversion_id)
 
             # # now get the MFDS...
-            mfd_table_id = None
+            for table_type, table_rows in mfd_table_rows.items():
+                mfd_table_id = None
 
-            mfd_table_data = []
-            for row in table_rows:
-                mfd_table_data.append([x for x in row])
+                mfd_table_data = []
+                for row in table_rows:
+                    mfd_table_data.append([x for x in row])
 
-            result = self._toshi_api.table.create_table(
-                mfd_table_data,
-                column_headers = ["series", "series_name", "X", "Y"],
-                column_types = ["integer","string","double","double"],
-                object_id=inversion_id,
-                table_name="Inversion Solution MFD table",
-                table_type="MFD_CURVES",
-                dimensions=None,
-            )
-            mfd_table_id = result['id']
-            result = self._toshi_api.inversion_solution.append_hazard_table(inversion_id, mfd_table_id,
-                label= "Inversion Solution MFD table",
-                table_type="MFD_CURVES",
-                dimensions=None,
-            )
-            print("created & linked table: ", mfd_table_id)
+                result = self._toshi_api.table.create_table(
+                    mfd_table_data,
+                    column_headers = ["series", "series_name", "X", "Y"],
+                    column_types = ["integer","string","double","double"],
+                    object_id=inversion_id,
+                    table_name="Inversion Solution MFD table",
+                    table_type=table_type,
+                    dimensions=None,
+                )
+                mfd_table_id = result['id']
+                result = self._toshi_api.inversion_solution.append_hazard_table(inversion_id, mfd_table_id,
+                    label= "Inversion Solution MFD table",
+                    table_type=table_type,
+                    dimensions=None,
+                )
+                print("created & linked table: ", mfd_table_id)
 
         else:
             print(metrics)
