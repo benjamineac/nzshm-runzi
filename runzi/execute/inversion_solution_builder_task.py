@@ -98,9 +98,19 @@ class BuilderTask():
                     float(ta['mfd_b_value_sans']),
                     float(ta['mfd_b_value_tvz']),
                     float(ta['mfd_transition_mag']))
-            inversion_runner.setGutenbergRichterMFDWeights(
-                    float(ta['mfd_equality_weight']),
-                    float(ta['mfd_inequality_weight']))
+
+            if ta.get('mfd_equality_weight') and  ta.get('mfd_inequality_weight'):
+                inversion_runner.setGutenbergRichterMFDWeights(
+                        float(ta['mfd_equality_weight']),
+                        float(ta['mfd_inequality_weight']))
+            elif (ta.get('mfd_uncertainty_weight') and  ta.get('mfd_uncertainty_power')) or (not ta.get('reweight') is None):
+                weight = 1 if ta.get('reweight') else ta.get('mfd_uncertainty_weight')
+                inversion_runner.setUncertaintyWeightedMFDWeights(
+                    float(weight), #set default for reweighting
+                    float(ta.get('mfd_uncertainty_power')),
+                    float(ta.get('mfd_uncertainty_scalar')))
+            else:
+                raise ValueError("Neither eq/ineq , nor uncertainty weights provided for MFD constraint setup")
 
             minMagSans = float(ta['min_mag_sans'])
             minMagTvz = float(ta['min_mag_tvz'])
@@ -110,22 +120,38 @@ class BuilderTask():
             maxMagTvz = float(ta['max_mag_tvz'])
             maxMagType = ta['max_mag_type']
             inversion_runner.setMaxMags(maxMagType,maxMagSans,maxMagTvz)
-            inversion_runner.setTVZSlipRateFactor(float(ta['tvz_slip_rate_factor']))
 
+            srf_sans = float(ta.get('sans_slip_rate_factor',1.0))
+            srf_tvz = float(ta.get('tvz_slip_rate_factor',1.0))
+            inversion_runner.setSlipRateFactor(srf_sans,srf_tvz)
+            
+            if not ta.get('reweight') is None:
+                inversion_runner.setReweightTargetQuantity("MAD")
 
-            if ta['slip_rate_weighting_type'] == 'UNCERTAINTY_ADJUSTED':
+            if not ta.get('slip_use_scaling') is None:
+                #V3x config
+                weight = 1 if ta.get('reweight') else ta.get('slip_uncertainty_weight')
+                inversion_runner.setSlipRateUncertaintyConstraint(
+                    float(weight), #set default for reweighting
+                    float(ta.get('slip_uncertainty_scaling_factor')))\
+                .setUnmodifiedSlipRateStdvs(not bool(ta.get('slip_use_scaling'))) #True means no slips scaling and vice-versa
+            elif ta.get('slip_rate_weighting_type') and ta['slip_rate_weighting_type'] == 'UNCERTAINTY_ADJUSTED':
+                #Deprecated...
                 inversion_runner.setSlipRateUncertaintyConstraint(
                     int(float(ta['slip_rate_weight'])),
                     int(ta['slip_uncertainty_scaling_factor']))
-            else:
+            elif ta.get('slip_rate_normalized_weight'):
                 #covers UCERF3 style SR constraints
                 inversion_runner.setSlipRateConstraint(ta['slip_rate_weighting_type'],
                     float(ta['slip_rate_normalized_weight']),
                     float(ta['slip_rate_unnormalized_weight']))
+            else:
+                raise ValueError(f"invalid slip constraint weight setup {ta}")
 
-            if ta.get('paleo_rate_constraint_weight', 0):
+            if ta.get('paleo_rate_constraint_weight', 1):
+                weight = 1 if ta.get('reweight') else ta.get('paleo_rate_constraint_weight')
                 inversion_runner.setPaleoRateConstraints(
-                    float(ta['paleo_rate_constraint_weight']),
+                    float(weight), #set default for reweighting
                     float(ta['paleo_parent_rate_smoothness_constraint_weight']),
                     ta['paleo_rate_constraint'],
                     ta['paleo_probability_model'])

@@ -50,15 +50,15 @@ make sure Dockerfile has correct runzi branch
 
 ```
 #EG
-export FATJAR_TAG=165-filter-rupset-alpha2
+export FATJAR_TAG=assemble_march04_alpha0 #mfd_unc_units #153-reweighting-alpha1 #low-stddev-alpha4-1e20 #low-stddev-alpha3
 docker build . --build-arg FATJAR_TAG=${FATJAR_TAG} --no-cache
 ```
 
 ### Tag new docker image
 
 ```
-export RUNZI_GITREF=8242bea
-export IMAGE_ID=b19b436212f2 #from docker build
+export RUNZI_GITREF=a4f818a
+export IMAGE_ID=063551c39dcf #from docker build
 export CONTAINER_TAG=runzi-${RUNZI_GITREF}_nz_opensha-${FATJAR_TAG}
 
 docker tag ${IMAGE_ID} 461564345538.dkr.ecr.us-east-1.amazonaws.com/nzshm22/runzi-opensha:${CONTAINER_TAG}
@@ -97,7 +97,7 @@ set_tosh_test_env
 ```
 wget https://nzshm-opensha-public-jars.s3.ap-southeast-2.amazonaws.com/nzshm-opensha-all-${FATJAR_TAG}.jar -P $(pwd)/nzshm-opensha/build/libs
 export NZSHM22_FATJAR=$(pwd)/nzshm-opensha/build/libs/nzshm-opensha-all-${FATJAR_TAG}.jar
-NZSHM22_SCRIPT_CLUSTER_MODE=LOCAL python3 ../../runzi/cli/cli.py
+AWS_PROFILE=toshi_batch_devops NZSHM22_TOSHI_API_ENABLED=1 NZSHM22_SCRIPT_CLUSTER_MODE=LOCAL python3 ../../runzi/cli/cli.py
 ```
 
 ### AWS or Dockerised run
