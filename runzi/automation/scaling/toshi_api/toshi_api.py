@@ -150,47 +150,10 @@ class ToshiApi(ToshiClientBase):
         return executed['node']
 
     def get_file_detail(self, id):
-        qry = '''
-        query file ($id:ID!) {
-                node(id: $id) {
-            __typename
-            ... on Node {
-              id
-            }
-            ... on FileInterface {
-              file_name
-              file_size
-              meta {k v}
-            }
-          }
-        }'''
-
-        print(qry)
-        input_variables = dict(id=id)
-        executed = self.run_query(qry, input_variables)
-        return executed['node']
-
+      return self.file.get_file(id)
 
     def get_file_download_url(self, id):
-        qry = '''
-        query download_file ($id:ID!) {
-                node(id: $id) {
-            __typename
-            ... on Node {
-              id
-            }
-            ... on FileInterface {
-              file_name
-              file_size
-              file_url
-            }
-          }
-        }'''
-
-        print(qry)
-        input_variables = dict(id=id)
-        executed = self.run_query(qry, input_variables)
-        return executed['node']
+      return self.file.get_file(id, True)
 
 
 
